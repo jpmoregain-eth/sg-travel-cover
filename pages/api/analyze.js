@@ -28,11 +28,17 @@ export default async function handler(req, res) {
     "total_annual": "calculated annual amount if available"
   },
   "coverage": {
-    "medical_expenses": "Overseas medical coverage amount with currency",
-    "trip_cancellation": "Trip cancellation/interruption coverage amount",
-    "baggage_loss": "Baggage/personal belongings coverage amount",
-    "personal_accident": "Personal accident / death coverage amount",
-    "travel_delay": "Travel delay coverage amount and threshold (e.g., after X hours)",
+    "medical_expenses": "For health/travel: overseas medical coverage amount with currency",
+    "trip_cancellation": "For travel: trip cancellation/interruption coverage amount",
+    "baggage_loss": "For travel: baggage/personal belongings coverage amount",
+    "personal_accident": "For travel: personal accident / death coverage amount",
+    "travel_delay": "For travel: delay coverage amount and threshold (e.g., after X hours)",
+    "vehicle_sum_insured": "For car: sum insured / market value with currency",
+    "third_party_liability": "For car: third-party bodily injury and property damage limits",
+    "own_damage_excess": "For car: own damage claim excess amount",
+    "unnamed_driver_excess": "For car: additional excess for unnamed drivers",
+    "young_driver_excess": "For car: additional excess for young/inexperienced drivers",
+    "windscreen_excess": "For car: windscreen claim excess amount",
     "main_benefits": ["All other coverage items with specific amounts/limits"],
     "riders": ["Add-on coverage with amounts"]
   },

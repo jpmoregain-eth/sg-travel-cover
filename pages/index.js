@@ -277,26 +277,32 @@ export default function Home() {
       csv += `Policy Number,"${(a.policy_number || '').replace(/"/g, '""')}"\n`;
       csv += `Policyholder,"${(a.policyholder || '').replace(/"/g, '""')}"\n`;
       if (a.premium) {
-        csv += `Premium Amount,"${(a.premium.amount || '').replace(/"/g, '""')}"\n`;
-        csv += `Premium Frequency,"${(a.premium.frequency || '').replace(/"/g, '""')}"\n`;
-        csv += `Annual Total,"${(a.premium.total_annual || '').replace(/"/g, '""')}"\n`;
+        csv += `Premium Amount,"${String(a.premium.amount || '').replace(/"/g, '""')}"\n`;
+        csv += `Premium Frequency,"${String(a.premium.frequency || '').replace(/"/g, '""')}"\n`;
+        csv += `Annual Total,"${String(a.premium.total_annual || '').replace(/"/g, '""')}"\n`;
       }
       if (a.key_dates) {
-        csv += `Issue Date,"${(a.key_dates.issue_date || '').replace(/"/g, '""')}"\n`;
-        csv += `Commencement Date,"${(a.key_dates.commencement_date || '').replace(/"/g, '""')}"\n`;
-        csv += `Maturity Date,"${(a.key_dates.maturity_date || '').replace(/"/g, '""')}"\n`;
-        csv += `Renewal Date,"${(a.key_dates.renewal_date || '').replace(/"/g, '""')}"\n`;
+        csv += `Issue Date,"${String(a.key_dates.issue_date || '').replace(/"/g, '""')}"\n`;
+        csv += `Commencement Date,"${String(a.key_dates.commencement_date || '').replace(/"/g, '""')}"\n`;
+        csv += `Maturity Date,"${String(a.key_dates.maturity_date || '').replace(/"/g, '""')}"\n`;
+        csv += `Renewal Date,"${String(a.key_dates.renewal_date || '').replace(/"/g, '""')}"\n`;
       }
       if (a.maturity) {
-        csv += `Maturity Type,"${(a.maturity.type || '').replace(/"/g, '""')}"\n`;
-        csv += `Term Years,"${(a.maturity.term_years || '').replace(/"/g, '""')}"\n`;
-        csv += `Surrender Notes,"${(a.maturity.surrender_value_notes || '').replace(/"/g, '""')}"\n`;
+        csv += `Maturity Type,"${String(a.maturity.type || '').replace(/"/g, '""')}"\n`;
+        csv += `Term Years,"${String(a.maturity.term_years || '').replace(/"/g, '""')}"\n`;
+        csv += `Surrender Notes,"${String(a.maturity.surrender_value_notes || '').replace(/"/g, '""')}"\n`;
       }
-      if (a.coverage?.medical_expenses) csv += `Medical Expenses,"${a.coverage.medical_expenses.replace(/"/g, '""')}"\n`;
-      if (a.coverage?.trip_cancellation) csv += `Trip Cancellation,"${a.coverage.trip_cancellation.replace(/"/g, '""')}"\n`;
-      if (a.coverage?.baggage_loss) csv += `Baggage Loss,"${a.coverage.baggage_loss.replace(/"/g, '""')}"\n`;
-      if (a.coverage?.personal_accident) csv += `Personal Accident,"${a.coverage.personal_accident.replace(/"/g, '""')}"\n`;
-      if (a.coverage?.travel_delay) csv += `Travel Delay,"${a.coverage.travel_delay.replace(/"/g, '""')}"\n`;
+      if (a.coverage?.medical_expenses) csv += `Medical Expenses,"${String(a.coverage.medical_expenses).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.trip_cancellation) csv += `Trip Cancellation,"${String(a.coverage.trip_cancellation).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.baggage_loss) csv += `Baggage Loss,"${String(a.coverage.baggage_loss).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.personal_accident) csv += `Personal Accident,"${String(a.coverage.personal_accident).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.travel_delay) csv += `Travel Delay,"${String(a.coverage.travel_delay).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.vehicle_sum_insured) csv += `Sum Insured / Market Value,"${String(a.coverage.vehicle_sum_insured).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.third_party_liability) csv += `Third-Party Liability,"${String(a.coverage.third_party_liability).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.own_damage_excess) csv += `Own Damage Excess,"${String(a.coverage.own_damage_excess).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.unnamed_driver_excess) csv += `Unnamed Driver Excess,"${String(a.coverage.unnamed_driver_excess).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.young_driver_excess) csv += `Young/Inexperienced Driver Excess,"${String(a.coverage.young_driver_excess).replace(/"/g, '""')}"\n`;
+      if (a.coverage?.windscreen_excess) csv += `Windscreen Excess,"${String(a.coverage.windscreen_excess).replace(/"/g, '""')}"\n`;
       if (a.coverage?.main_benefits?.length) {
         csv += `Other Coverage,"${a.coverage.main_benefits.join('; ').replace(/"/g, '""')}"\n`;
       }
@@ -367,6 +373,12 @@ export default function Home() {
     if (a.coverage?.baggage_loss) rows.push(['Baggage Loss', a.coverage.baggage_loss]);
     if (a.coverage?.personal_accident) rows.push(['Personal Accident', a.coverage.personal_accident]);
     if (a.coverage?.travel_delay) rows.push(['Travel Delay', a.coverage.travel_delay]);
+    if (a.coverage?.vehicle_sum_insured) rows.push(['Sum Insured / Market Value', a.coverage.vehicle_sum_insured]);
+    if (a.coverage?.third_party_liability) rows.push(['Third-Party Liability', a.coverage.third_party_liability]);
+    if (a.coverage?.own_damage_excess) rows.push(['Own Damage Excess', a.coverage.own_damage_excess]);
+    if (a.coverage?.unnamed_driver_excess) rows.push(['Unnamed Driver Excess', a.coverage.unnamed_driver_excess]);
+    if (a.coverage?.young_driver_excess) rows.push(['Young/Inexperienced Driver Excess', a.coverage.young_driver_excess]);
+    if (a.coverage?.windscreen_excess) rows.push(['Windscreen Excess', a.coverage.windscreen_excess]);
     if (a.coverage?.main_benefits?.length) {
       rows.push(['', '']);
       rows.push(['Other Coverage', '']);
@@ -841,6 +853,56 @@ function AnalysisResults({ analysis }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Car Insurance Coverage */}
+      {(analysis.coverage?.vehicle_sum_insured || analysis.coverage?.third_party_liability || analysis.coverage?.own_damage_excess || analysis.coverage?.unnamed_driver_excess || analysis.coverage?.young_driver_excess || analysis.coverage?.windscreen_excess) && (
+        <div className="bg-gradient-to-br from-blue-900/20 to-slate-800 border border-blue-500/20 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-blue-300 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Car Coverage & Excess
+          </h3>
+          <div className="space-y-2 text-sm">
+            {analysis.coverage.vehicle_sum_insured && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Sum Insured / Market Value</span>
+                <span className="text-white font-medium">{analysis.coverage.vehicle_sum_insured}</span>
+              </div>
+            )}
+            {analysis.coverage.third_party_liability && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Third-Party Liability</span>
+                <span className="text-white font-medium">{analysis.coverage.third_party_liability}</span>
+              </div>
+            )}
+            {analysis.coverage.own_damage_excess && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Own Damage Excess</span>
+                <span className="text-amber-300 font-medium">{analysis.coverage.own_damage_excess}</span>
+              </div>
+            )}
+            {analysis.coverage.unnamed_driver_excess && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Unnamed Driver Excess</span>
+                <span className="text-amber-300 font-medium">{analysis.coverage.unnamed_driver_excess}</span>
+              </div>
+            )}
+            {analysis.coverage.young_driver_excess && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Young/Inexperienced Driver Excess</span>
+                <span className="text-amber-300 font-medium">{analysis.coverage.young_driver_excess}</span>
+              </div>
+            )}
+            {analysis.coverage.windscreen_excess && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Windscreen Excess</span>
+                <span className="text-amber-300 font-medium">{analysis.coverage.windscreen_excess}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
