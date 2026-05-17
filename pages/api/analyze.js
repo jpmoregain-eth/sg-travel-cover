@@ -28,9 +28,16 @@ export default async function handler(req, res) {
     "total_annual": "calculated annual amount if available"
   },
   "coverage": {
-    "main_benefits": ["List of main coverage items with amounts"],
-    "riders": ["Any add-on coverage"]
+    "medical_expenses": "Overseas medical coverage amount with currency",
+    "trip_cancellation": "Trip cancellation/interruption coverage amount",
+    "baggage_loss": "Baggage/personal belongings coverage amount",
+    "personal_accident": "Personal accident / death coverage amount",
+    "travel_delay": "Travel delay coverage amount and threshold (e.g., after X hours)",
+    "main_benefits": ["All other coverage items with specific amounts/limits"],
+    "riders": ["Add-on coverage with amounts"]
   },
+  "payout_criteria": ["Specific conditions that trigger payouts — e.g., 'Medical expenses: S$50,000, covers hospitalisation and emergency dental'", "Trip cancellation: S$5,000, covers non-refundable deposits if cancelled for covered reasons"],
+  "deductibles_excess": ["Any excess/deductible amounts per claim type"],
   "exclusions": ["List what's NOT covered"],
   "maturity": {
     "type": "Whole Life / Term / Endowment / ILP / Other",
@@ -50,11 +57,21 @@ export default async function handler(req, res) {
     "maturity_date": "",
     "renewal_date": ""
   },
-  "warnings": ["Any important warnings or gaps detected"],
-  "summary": "A 2-3 sentence plain-English summary of what this policy does and who it's for"
+  "warnings": ["Any important warnings, gaps, or unusual exclusions"],
+  "summary": "A 2-3 sentence plain-English summary of what this policy does, who it's for, and the total coverage value"
 }
 
-If any field is not found in the text, set it to null or empty array. Be thorough but accurate — only extract what's actually in the document.`;
+IMPORTANT EXTRACTION RULES:
+1. ALWAYS extract specific dollar amounts (S$ / $ / USD) for every coverage item found
+2. ALWAYS extract payout criteria — what triggers a claim and how much is paid
+3. ALWAYS extract deductibles/excess amounts per claim type
+4. For travel insurance specifically: extract medical, trip cancellation, baggage, delay, personal accident amounts
+5. For life/health: extract sum assured, critical illness payout amounts, waiting periods
+6. For car insurance: extract third-party liability limits, own damage coverage, excess amounts
+7. For home insurance: extract building contents limit, valuables sub-limits, liability coverage
+8. NEVER leave coverage amounts as generic text — always include the dollar figure if present
+9. If a field is genuinely not in the document, set it to null
+10. Return ONLY valid JSON — no markdown code blocks, no explanations outside the JSON`;
 
     // Timeout: 8 seconds to stay under Vercel free tier 10s limit
     const controller = new AbortController();

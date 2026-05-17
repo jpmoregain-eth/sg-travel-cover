@@ -292,11 +292,22 @@ export default function Home() {
         csv += `Term Years,"${(a.maturity.term_years || '').replace(/"/g, '""')}"\n`;
         csv += `Surrender Notes,"${(a.maturity.surrender_value_notes || '').replace(/"/g, '""')}"\n`;
       }
+      if (a.coverage?.medical_expenses) csv += `Medical Expenses,"${a.coverage.medical_expenses.replace(/"/g, '""')}"\n`;
+      if (a.coverage?.trip_cancellation) csv += `Trip Cancellation,"${a.coverage.trip_cancellation.replace(/"/g, '""')}"\n`;
+      if (a.coverage?.baggage_loss) csv += `Baggage Loss,"${a.coverage.baggage_loss.replace(/"/g, '""')}"\n`;
+      if (a.coverage?.personal_accident) csv += `Personal Accident,"${a.coverage.personal_accident.replace(/"/g, '""')}"\n`;
+      if (a.coverage?.travel_delay) csv += `Travel Delay,"${a.coverage.travel_delay.replace(/"/g, '""')}"\n`;
       if (a.coverage?.main_benefits?.length) {
-        csv += `Main Benefits,"${a.coverage.main_benefits.join('; ').replace(/"/g, '""')}"\n`;
+        csv += `Other Coverage,"${a.coverage.main_benefits.join('; ').replace(/"/g, '""')}"\n`;
       }
       if (a.coverage?.riders?.length) {
         csv += `Riders,"${a.coverage.riders.join('; ').replace(/"/g, '""')}"\n`;
+      }
+      if (a.payout_criteria?.length) {
+        csv += `Payout Criteria,"${a.payout_criteria.join('; ').replace(/"/g, '""')}"\n`;
+      }
+      if (a.deductibles_excess?.length) {
+        csv += `Deductibles / Excess,"${a.deductibles_excess.join('; ').replace(/"/g, '""')}"\n`;
       }
       if (a.exclusions?.length) {
         csv += `Exclusions,"${a.exclusions.join('; ').replace(/"/g, '""')}"\n`;
@@ -351,15 +362,30 @@ export default function Home() {
       rows.push(['Term Years', a.maturity.term_years || '']);
       rows.push(['Surrender Notes', a.maturity.surrender_value_notes || '']);
     }
+    if (a.coverage?.medical_expenses) rows.push(['Medical Expenses', a.coverage.medical_expenses]);
+    if (a.coverage?.trip_cancellation) rows.push(['Trip Cancellation', a.coverage.trip_cancellation]);
+    if (a.coverage?.baggage_loss) rows.push(['Baggage Loss', a.coverage.baggage_loss]);
+    if (a.coverage?.personal_accident) rows.push(['Personal Accident', a.coverage.personal_accident]);
+    if (a.coverage?.travel_delay) rows.push(['Travel Delay', a.coverage.travel_delay]);
     if (a.coverage?.main_benefits?.length) {
       rows.push(['', '']);
-      rows.push(['Main Benefits', '']);
+      rows.push(['Other Coverage', '']);
       a.coverage.main_benefits.forEach(b => rows.push(['', b]));
     }
     if (a.coverage?.riders?.length) {
       rows.push(['', '']);
       rows.push(['Riders', '']);
       a.coverage.riders.forEach(r => rows.push(['', r]));
+    }
+    if (a.payout_criteria?.length) {
+      rows.push(['', '']);
+      rows.push(['Payout Criteria', '']);
+      a.payout_criteria.forEach(c => rows.push(['', c]));
+    }
+    if (a.deductibles_excess?.length) {
+      rows.push(['', '']);
+      rows.push(['Deductibles & Excess', '']);
+      a.deductibles_excess.forEach(d => rows.push(['', d]));
     }
     if (a.exclusions?.length) {
       rows.push(['', '']);
@@ -746,14 +772,58 @@ function AnalysisResults({ analysis }) {
         )}
       </div>
 
-      {/* Coverage */}
+      {/* Coverage Amounts */}
+      {(analysis.coverage?.medical_expenses || analysis.coverage?.trip_cancellation || analysis.coverage?.baggage_loss || analysis.coverage?.personal_accident || analysis.coverage?.travel_delay) && (
+        <div className="bg-gradient-to-br from-emerald-900/20 to-slate-800 border border-emerald-500/20 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-emerald-300 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Coverage Limits
+          </h3>
+          <div className="space-y-2 text-sm">
+            {analysis.coverage.medical_expenses && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Medical Expenses</span>
+                <span className="text-white font-medium">{analysis.coverage.medical_expenses}</span>
+              </div>
+            )}
+            {analysis.coverage.trip_cancellation && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Trip Cancellation</span>
+                <span className="text-white font-medium">{analysis.coverage.trip_cancellation}</span>
+              </div>
+            )}
+            {analysis.coverage.baggage_loss && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Baggage Loss</span>
+                <span className="text-white font-medium">{analysis.coverage.baggage_loss}</span>
+              </div>
+            )}
+            {analysis.coverage.personal_accident && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Personal Accident</span>
+                <span className="text-white font-medium">{analysis.coverage.personal_accident}</span>
+              </div>
+            )}
+            {analysis.coverage.travel_delay && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Travel Delay</span>
+                <span className="text-white font-medium">{analysis.coverage.travel_delay}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Coverage Benefits List */}
       {analysis.coverage?.main_benefits?.length > 0 && (
         <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
           <h3 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
             <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Coverage
+            Other Coverage
           </h3>
           <ul className="space-y-1.5">
             {analysis.coverage.main_benefits.map((benefit, i) => (
@@ -771,6 +841,46 @@ function AnalysisResults({ analysis }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Payout Criteria */}
+      {analysis.payout_criteria?.length > 0 && (
+        <div className="bg-slate-800 border border-emerald-500/10 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-emerald-300 mb-2 flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Payout Criteria
+          </h3>
+          <ul className="space-y-1.5">
+            {analysis.payout_criteria.map((c, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className="w-1 h-1 rounded-full bg-emerald-400 mt-2 flex-shrink-0" />
+                <span className="text-slate-300">{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Deductibles / Excess */}
+      {analysis.deductibles_excess?.length > 0 && (
+        <div className="bg-slate-800 border border-amber-500/20 rounded-xl p-4">
+          <h3 className="text-sm font-medium text-amber-300 mb-2 flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Deductibles & Excess
+          </h3>
+          <ul className="space-y-1.5">
+            {analysis.deductibles_excess.map((d, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className="w-1 h-1 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                <span className="text-amber-200/80">{d}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
