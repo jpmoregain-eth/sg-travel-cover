@@ -39,31 +39,51 @@ export default function Home() {
     const options = { data: arrayBuffer };
     if (password) options.password = password;
     
-    // Wrap getDocument in a 10-second timeout — password-protected PDFs can hang here
-    let pdf;
-    try {
-      const loadPromise = pdfjs.getDocument(options).promise;
-      const loadTimeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PDF loading timed out. The file may be password-protected, corrupted, or too large.')), 10000)
-      );
-      pdf = await Promise.race([loadPromise, loadTimeout]);
-    } catch (e) {
-      const msg = String(e);
-      if (msg.includes('password') || msg.includes('Password') || e.name === 'PasswordException' || e.code === 1 || e.code === 2) {
-        throw new Error('PASSWORD_REQUIRED');
-      }
-      throw new Error('Could not read this PDF. It may be a scanned image file, password-protected, or corrupted. Try pasting text manually.');
-    }
-    
-    let fullText = '';
-    for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
-      if (onProgress) onProgress(i, pdf.numPages);
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n\n';
-    }
-    return fullText.trim();
+    return new Promise((resolve, reject) => {
+      // Aggressive 5-second timeout for the ENTIRE operation
+      const timeoutId = setTimeout(() => {
+        reject(new Error('PDF loading timed out. The file may be password-protected, corrupted, or too large. Try pasting text manually.'));
+      }, 5000);
+      
+      const loadingTask = pdfjs.getDocument(options);
+      
+      // This fires when a password is needed — reject immediately
+      loadingTask.onPassword = (updatePassword, reason) => {
+        clearTimeout(timeoutId);
+        reject(new Error('PASSWORD_REQUIRED'));
+      };
+      
+      loadingTask.promise.then(pdf => {
+        clearTimeout(timeoutId);
+        let fullText = '';
+        const maxPages = Math.min(pdf.numPages, 20);
+        
+        const extractPages = async () => {
+          try {
+            for (let i = 1; i <= maxPages; i++) {
+              if (onProgress) onProgress(i, maxPages);
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items.map(item => item.str).join(' ');
+              fullText += pageText + '\n\n';
+            }
+            resolve(fullText.trim());
+          } catch (err) {
+            reject(err);
+          }
+        };
+        
+        extractPages();
+      }).catch(err => {
+        clearTimeout(timeoutId);
+        const msg = String(err);
+        if (msg.includes('password') || msg.includes('Password') || err.name === 'PasswordException') {
+          reject(new Error('PASSWORD_REQUIRED'));
+        } else {
+          reject(err);
+        }
+      });
+    });
   };
 
   const analyzeDocText = async (text, id) => {
