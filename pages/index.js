@@ -34,55 +34,60 @@ export default function Home() {
     setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
-  const extractTextFromPdf = async (arrayBuffer, password = null, onProgress = null) => {
+  const extractTextFromPdf = async (arrayBuffer, password = null, timeoutMs = 5000) => {
     const pdfjs = await loadPdfJs();
     const options = { data: arrayBuffer };
     if (password) options.password = password;
     
     return new Promise((resolve, reject) => {
-      // Aggressive 5-second timeout for the ENTIRE operation
       const timeoutId = setTimeout(() => {
-        reject(new Error('PDF loading timed out. The file may be password-protected, corrupted, or too large. Try pasting text manually.'));
-      }, 5000);
+        reject(new Error('TIMEOUT'));
+      }, timeoutMs);
       
-      const loadingTask = pdfjs.getDocument(options);
-      
-      // This fires when a password is needed — reject immediately
-      loadingTask.onPassword = (updatePassword, reason) => {
-        clearTimeout(timeoutId);
-        reject(new Error('PASSWORD_REQUIRED'));
-      };
-      
-      loadingTask.promise.then(pdf => {
-        clearTimeout(timeoutId);
-        let fullText = '';
-        const maxPages = Math.min(pdf.numPages, 20);
+      try {
+        const loadingTask = pdfjs.getDocument(options);
         
-        const extractPages = async () => {
-          try {
-            for (let i = 1; i <= maxPages; i++) {
-              if (onProgress) onProgress(i, maxPages);
-              const page = await pdf.getPage(i);
-              const textContent = await page.getTextContent();
-              const pageText = textContent.items.map(item => item.str).join(' ');
-              fullText += pageText + '\n\n';
+        // v4 API: onPassword callback
+        if (loadingTask.onPassword !== undefined) {
+          loadingTask.onPassword = (updatePassword, reason) => {
+            clearTimeout(timeoutId);
+            reject(new Error('PASSWORD_REQUIRED'));
+          };
+        }
+        
+        loadingTask.promise.then(pdf => {
+          clearTimeout(timeoutId);
+          let fullText = '';
+          const maxPages = Math.min(pdf.numPages, 20);
+          
+          const extractPages = async () => {
+            try {
+              for (let i = 1; i <= maxPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n\n';
+              }
+              resolve(fullText.trim());
+            } catch (err) {
+              reject(err);
             }
-            resolve(fullText.trim());
-          } catch (err) {
+          };
+          
+          extractPages();
+        }).catch(err => {
+          clearTimeout(timeoutId);
+          const msg = String(err);
+          if (msg.includes('password') || msg.includes('Password') || err.name === 'PasswordException') {
+            reject(new Error('PASSWORD_REQUIRED'));
+          } else {
             reject(err);
           }
-        };
-        
-        extractPages();
-      }).catch(err => {
+        });
+      } catch (err) {
         clearTimeout(timeoutId);
-        const msg = String(err);
-        if (msg.includes('password') || msg.includes('Password') || err.name === 'PasswordException') {
-          reject(new Error('PASSWORD_REQUIRED'));
-        } else {
-          reject(err);
-        }
-      });
+        reject(err);
+      }
     });
   };
 
@@ -143,29 +148,29 @@ export default function Home() {
       const arrayBuffer = await selectedFile.arrayBuffer();
 
       if (selectedFile.type === 'application/pdf') {
-        // Show extraction progress
-        updateDoc(id, { loading: true, stage: 'extracting' });
-        
-        // Wrap extraction in timeout: 15 seconds max
-        const extractPromise = extractTextFromPdf(arrayBuffer, providedPassword, (page, total) => {
-          updateDoc(id, { stage: 'extracting', extractProgress: `${page}/${total}` });
-        });
-        
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('PDF extraction timed out. The file may be too large or image-based. Try pasting text manually.')), 15000)
-        );
-        
-        text = await Promise.race([extractPromise, timeoutPromise]);
+        // First try: quick 3-second attempt without password
+        // Password-protected PDFs will timeout fast, then we prompt for password
+        try {
+          text = await extractTextFromPdf(arrayBuffer, null, 3000);
+        } catch (firstErr) {
+          if (firstErr.message === 'TIMEOUT' || firstErr.message === 'PASSWORD_REQUIRED') {
+            // Show password prompt
+            updateDoc(id, { 
+              needsPassword: true, 
+              pendingBuffer: arrayBuffer, 
+              loading: false,
+              stage: null,
+              extractProgress: null,
+              error: ''
+            });
+            return;
+          }
+          throw firstErr;
+        }
       } else if (selectedFile.type.startsWith('text/')) {
         text = await selectedFile.text();
       } else {
         updateDoc(id, { error: 'Unsupported file type. Please upload a PDF or text file.', loading: false, stage: null });
-        return;
-      }
-
-      if (text === 'PASSWORD_REQUIRED') {
-        // This shouldn't happen since we throw, but just in case
-        updateDoc(id, { needsPassword: true, pendingBuffer: arrayBuffer, loading: false });
         return;
       }
 
@@ -178,7 +183,7 @@ export default function Home() {
       await analyzeDocText(text, id);
 
     } catch (err) {
-      if (err.message === 'PASSWORD_REQUIRED') {
+      if (err.message === 'PASSWORD_REQUIRED' || err.message === 'TIMEOUT') {
         updateDoc(id, { 
           needsPassword: true, 
           pendingBuffer: arrayBuffer, 
@@ -200,10 +205,8 @@ export default function Home() {
     updateDoc(id, { needsPassword: false, loading: true, error: '', stage: 'extracting' });
     
     try {
-      // Add 15-second timeout around PDF extraction with password
-      const extractPromise = extractTextFromPdf(doc.pendingBuffer, doc.password, (page, total) => {
-        updateDoc(id, { stage: 'extracting', extractProgress: `${page}/${total}` });
-      });
+      // Add 15-second timeout around PDF extraction with password (decryption takes time)
+      const extractPromise = extractTextFromPdf(doc.pendingBuffer, doc.password, 15000);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('PDF extraction timed out. The password may be incorrect or the file is too large. Try pasting text manually.')), 15000)
       );
