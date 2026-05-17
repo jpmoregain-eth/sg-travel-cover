@@ -63,12 +63,19 @@ export default function Home() {
     }
     updateDoc(id, { loading: true, error: '', analysis: null });
 
+    // Client-side timeout: 15 seconds
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({ text })
       });
+
+      clearTimeout(timeoutId);
 
       const data = await res.json();
       
@@ -80,7 +87,12 @@ export default function Home() {
         updateDoc(id, { analysis: data.analysis, loading: false });
       }
     } catch (err) {
-      updateDoc(id, { error: err.message || 'Failed to analyze text', loading: false });
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        updateDoc(id, { error: 'Request timed out. The document may be too large or the AI service is slow. Try pasting a smaller excerpt manually.', loading: false });
+      } else {
+        updateDoc(id, { error: err.message || 'Failed to analyze text', loading: false });
+      }
     }
   };
 

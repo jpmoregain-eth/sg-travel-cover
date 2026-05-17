@@ -56,22 +56,29 @@ export default async function handler(req, res) {
 
 If any field is not found in the text, set it to null or empty array. Be thorough but accurate — only extract what's actually in the document.`;
 
+    // Timeout: 8 seconds to stay under Vercel free tier 10s limit
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const response = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${API_KEY}`,
         'Content-Type': 'application/json'
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model: 'agnes-1.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyze this insurance document text and return JSON only:\n\n${text.substring(0, 15000)}` }
+          { role: 'user', content: `Analyze this insurance document text and return JSON only:\n\n${text.substring(0, 12000)}` }
         ],
         temperature: 0.1,
-        max_tokens: 4000
+        max_tokens: 2000
       })
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return res.status(502).json({ error: 'AI analysis failed. Please try again.' });
@@ -89,7 +96,6 @@ If any field is not found in the text, set it to null or empty array. Be thoroug
     try {
       analysis = JSON.parse(jsonStr);
     } catch {
-      // If JSON parse fails, return raw text for debugging
       return res.status(200).json({ 
         raw_response: aiContent,
         error: 'Could not parse structured data. Showing raw analysis instead.'
@@ -99,6 +105,11 @@ If any field is not found in the text, set it to null or empty array. Be thoroug
     return res.status(200).json({ analysis });
 
   } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ 
+        error: 'AI analysis timed out. The document may be too large or the service is slow. Try pasting a smaller excerpt manually.' 
+      });
+    }
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
