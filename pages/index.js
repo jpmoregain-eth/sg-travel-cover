@@ -18,17 +18,29 @@ export default function Home() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState('');
+  const [pendingFile, setPendingFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
-  const extractTextFromPdf = async (arrayBuffer) => {
+  const extractTextFromPdf = async (arrayBuffer, password = null) => {
     const pdfjs = await loadPdfJs();
     let pdf;
+    const options = { data: arrayBuffer };
+    if (password) options.password = password;
     try {
-      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument(options).promise;
     } catch (e) {
-      if (e.name === 'PasswordException' || String(e).includes('password') || String(e).includes('No password given')) {
-        throw new Error('PDF appears to be password-protected or is a scanned image. Try pasting the text manually below.');
+      const msg = String(e);
+      if (msg.includes('password') || msg.includes('Password') || e.name === 'PasswordException') {
+        if (!password) {
+          setNeedsPassword(true);
+          setPendingFile({ arrayBuffer, name: file?.name || 'document.pdf' });
+          setLoading(false);
+          throw new Error('PASSWORD_REQUIRED');
+        }
+        throw new Error('Incorrect password. Please try again.');
       }
       throw new Error('Could not read this PDF. It may be a scanned image file. Try pasting text manually.');
     }
@@ -75,11 +87,104 @@ export default function Home() {
     }
   };
 
+  const exportToXlsx = () => {
+    if (!analysis || analysis.raw) return;
+    const rows = [];
+    rows.push(['Field', 'Value']);
+    rows.push(['Policy Type', analysis.policy_type || '']);
+    rows.push(['Insurer', analysis.insurer || '']);
+    rows.push(['Policy Number', analysis.policy_number || '']);
+    rows.push(['Policyholder', analysis.policyholder || '']);
+    if (analysis.premium) {
+      rows.push(['Premium Amount', analysis.premium.amount || '']);
+      rows.push(['Premium Frequency', analysis.premium.frequency || '']);
+      rows.push(['Annual Total', analysis.premium.total_annual || '']);
+    }
+    if (analysis.key_dates) {
+      rows.push(['Issue Date', analysis.key_dates.issue_date || '']);
+      rows.push(['Commencement Date', analysis.key_dates.commencement_date || '']);
+      rows.push(['Maturity Date', analysis.key_dates.maturity_date || '']);
+      rows.push(['Renewal Date', analysis.key_dates.renewal_date || '']);
+    }
+    if (analysis.maturity) {
+      rows.push(['Maturity Type', analysis.maturity.type || '']);
+      rows.push(['Term (Years)', analysis.maturity.term_years || '']);
+      rows.push(['Surrender Notes', analysis.maturity.surrender_value_notes || '']);
+    }
+    if (analysis.coverage?.main_benefits?.length) {
+      rows.push(['', '']);
+      rows.push(['Coverage - Main Benefits', '']);
+      analysis.coverage.main_benefits.forEach(b => rows.push(['', b]));
+    }
+    if (analysis.coverage?.riders?.length) {
+      rows.push(['', '']);
+      rows.push(['Riders / Add-ons', '']);
+      analysis.coverage.riders.forEach(r => rows.push(['', r]));
+    }
+    if (analysis.exclusions?.length) {
+      rows.push(['', '']);
+      rows.push(['Exclusions', '']);
+      analysis.exclusions.forEach(e => rows.push(['', e]));
+    }
+    if (analysis.investment_linked?.is_ilp) {
+      rows.push(['', '']);
+      rows.push(['Investment-Linked Policy', '']);
+      rows.push(['Allocation', analysis.investment_linked.allocation || '']);
+      rows.push(['Projected Returns', analysis.investment_linked.projected_returns || '']);
+      if (analysis.investment_linked.funds?.length) {
+        rows.push(['Underlying Funds', analysis.investment_linked.funds.join(', ')]);
+      }
+    }
+    if (analysis.warnings?.length) {
+      rows.push(['', '']);
+      rows.push(['Warnings / Notes', '']);
+      analysis.warnings.forEach(w => rows.push(['', w]));
+    }
+    rows.push(['', '']);
+    rows.push(['Summary', analysis.summary || '']);
+
+    let csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'insurance-analysis.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (!pdfPassword || !pendingFile) return;
+    setNeedsPassword(false);
+    setLoading(true);
+    setError('');
+    try {
+      const text = await extractTextFromPdf(pendingFile.arrayBuffer, pdfPassword);
+      if (text.length < 100) {
+        setError('Could not extract enough text from this document. It may be a scanned image PDF. Try uploading a text-based PDF or paste text manually below.');
+        setLoading(false);
+        return;
+      }
+      setExtractedText(text.substring(0, 5000));
+      await analyzeText(text);
+    } catch (err) {
+      if (err.message !== 'PASSWORD_REQUIRED') {
+        setError(err.message || 'Failed to process document');
+        setLoading(false);
+      }
+    }
+  };
+
   const processFile = async (selectedFile) => {
     if (!selectedFile) return;
     setFile(selectedFile);
     setError('');
     setAnalysis(null);
+    setNeedsPassword(false);
+    setPdfPassword('');
+    setPendingFile(null);
     setLoading(true);
 
     try {
@@ -200,6 +305,40 @@ export default function Home() {
           </div>
         )}
 
+        {needsPassword && (
+          <div className="mt-6 p-5 rounded-2xl bg-slate-900 border border-amber-500/20">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3 className="font-semibold text-amber-300">Password Required</h3>
+            </div>
+            <p className="text-sm text-slate-400 mb-3">This PDF is password-protected. Please enter the password to continue.</p>
+            <div className="flex gap-3">
+              <input
+                type="password"
+                value={pdfPassword}
+                onChange={(e) => setPdfPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                placeholder="Enter PDF password"
+                className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+              />
+              <button
+                onClick={handlePasswordSubmit}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                Unlock
+              </button>
+              <button
+                onClick={() => { setNeedsPassword(false); setPendingFile(null); setPdfPassword(''); }}
+                className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="mt-8 text-center">
             <div className="inline-flex items-center gap-3 px-5 py-3 bg-slate-900 rounded-xl">
@@ -211,6 +350,17 @@ export default function Home() {
 
         {analysis && !analysis.raw && (
           <div className="mt-8 space-y-6">
+            <div className="flex justify-end">
+              <button
+                onClick={exportToXlsx}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download CSV
+              </button>
+            </div>
             <div className="bg-gradient-to-br from-emerald-900/30 to-slate-900 border border-emerald-500/20 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-3">
                 <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
