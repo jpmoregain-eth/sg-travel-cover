@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  distDir: 'dist',
+  // Removed output: 'export' — API routes need server-side execution
 }
 
 module.exports = nextConfig

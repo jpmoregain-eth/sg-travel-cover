@@ -23,7 +23,15 @@ export default function Home() {
 
   const extractTextFromPdf = async (arrayBuffer) => {
     const pdfjs = await loadPdfJs();
-    const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    let pdf;
+    try {
+      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+    } catch (e) {
+      if (e.name === 'PasswordException' || String(e).includes('password') || String(e).includes('No password given')) {
+        throw new Error('PDF appears to be password-protected or is a scanned image. Try pasting the text manually below.');
+      }
+      throw new Error('Could not read this PDF. It may be a scanned image file. Try pasting text manually.');
+    }
     let fullText = '';
     for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
       const page = await pdf.getPage(i);
