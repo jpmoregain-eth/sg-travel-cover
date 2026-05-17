@@ -21,6 +21,8 @@ const createEmptyDoc = (id) => ({
   analysis: null,
   loading: false,
   error: '',
+  stage: null,
+  extractProgress: null,
 });
 
 export default function Home() {
@@ -32,7 +34,7 @@ export default function Home() {
     setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
-  const extractTextFromPdf = async (arrayBuffer, password = null) => {
+  const extractTextFromPdf = async (arrayBuffer, password = null, onProgress = null) => {
     const pdfjs = await loadPdfJs();
     const options = { data: arrayBuffer };
     if (password) options.password = password;
@@ -48,6 +50,7 @@ export default function Home() {
     }
     let fullText = '';
     for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+      if (onProgress) onProgress(i, pdf.numPages);
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items.map(item => item.str).join(' ');
@@ -113,11 +116,23 @@ export default function Home() {
       const arrayBuffer = await selectedFile.arrayBuffer();
 
       if (selectedFile.type === 'application/pdf') {
-        text = await extractTextFromPdf(arrayBuffer, providedPassword);
+        // Show extraction progress
+        updateDoc(id, { loading: true, stage: 'extracting' });
+        
+        // Wrap extraction in timeout: 15 seconds max
+        const extractPromise = extractTextFromPdf(arrayBuffer, providedPassword, (page, total) => {
+          updateDoc(id, { stage: 'extracting', extractProgress: `${page}/${total}` });
+        });
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('PDF extraction timed out. The file may be too large or image-based. Try pasting text manually.')), 15000)
+        );
+        
+        text = await Promise.race([extractPromise, timeoutPromise]);
       } else if (selectedFile.type.startsWith('text/')) {
         text = await selectedFile.text();
       } else {
-        updateDoc(id, { error: 'Unsupported file type. Please upload a PDF or text file.', loading: false });
+        updateDoc(id, { error: 'Unsupported file type. Please upload a PDF or text file.', loading: false, stage: null });
         return;
       }
 
@@ -128,11 +143,11 @@ export default function Home() {
       }
 
       if (text.length < 100) {
-        updateDoc(id, { error: 'Could not extract enough text. It may be a scanned image PDF. Try pasting text manually.', loading: false });
+        updateDoc(id, { error: 'Could not extract enough text. It may be a scanned image PDF. Try pasting text manually.', loading: false, stage: null, extractProgress: null });
         return;
       }
 
-      updateDoc(id, { extractedText: text.substring(0, 5000), needsPassword: false, pendingBuffer: null });
+      updateDoc(id, { extractedText: text.substring(0, 5000), needsPassword: false, pendingBuffer: null, stage: 'analyzing', extractProgress: null });
       await analyzeDocText(text, id);
 
     } catch (err) {
@@ -141,11 +156,13 @@ export default function Home() {
           needsPassword: true, 
           pendingBuffer: arrayBuffer, 
           loading: false,
+          stage: null,
+          extractProgress: null,
           error: ''
         });
         return;
       }
-      updateDoc(id, { error: err.message || 'Failed to process document', loading: false });
+      updateDoc(id, { error: err.message || 'Failed to process document', loading: false, stage: null, extractProgress: null });
     }
   };
 
@@ -512,7 +529,13 @@ export default function Home() {
                 {doc.loading && (
                   <div className="mt-3 flex items-center gap-2 text-sm text-slate-400">
                     <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                    Analyzing with AI...
+                    {doc.stage === 'extracting' ? (
+                      <span>Extracting text from PDF{doc.extractProgress ? ` (${doc.extractProgress})` : ''}...</span>
+                    ) : doc.stage === 'analyzing' ? (
+                      <span>Analyzing with AI...</span>
+                    ) : (
+                      <span>Processing...</span>
+                    )}
                   </div>
                 )}
 
