@@ -68,7 +68,7 @@ If any field is not found in the text, set it to null or empty array. Be thoroug
       },
       signal: controller.signal,
       body: JSON.stringify({
-        model: 'agnes-1.5-flash',
+        model: 'agnes-1.5-pro',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyze this insurance document text and return JSON only:\n\n${text.substring(0, 12000)}` }
