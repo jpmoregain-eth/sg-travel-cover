@@ -146,6 +146,8 @@ export default function Home() {
     try {
       let text = '';
       const arrayBuffer = await selectedFile.arrayBuffer();
+      // Clone the buffer because pdf.js can detach it on first attempt
+      const clonedBuffer = arrayBuffer.slice(0);
 
       if (selectedFile.type === 'application/pdf') {
         // First try: quick 3-second attempt without password
@@ -154,10 +156,10 @@ export default function Home() {
           text = await extractTextFromPdf(arrayBuffer, null, 3000);
         } catch (firstErr) {
           if (firstErr.message === 'TIMEOUT' || firstErr.message === 'PASSWORD_REQUIRED') {
-            // Show password prompt
+            // Show password prompt — use the cloned buffer
             updateDoc(id, { 
               needsPassword: true, 
-              pendingBuffer: arrayBuffer, 
+              pendingBuffer: clonedBuffer, 
               loading: false,
               stage: null,
               extractProgress: null,
