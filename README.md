@@ -1,4 +1,4 @@
-# InsurEase
+# Policy2Summary
 
 **AI Insurance Document Reader** — Upload your insurance certificate, get an instant plain-English summary.
 

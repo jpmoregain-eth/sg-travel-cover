@@ -5,8 +5,8 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <Head>
-        <title>Privacy Policy — InsurEase</title>
-        <meta name="description" content="InsurEase privacy policy. We do not store your documents." />
+        <title>Privacy Policy — Policy2Summary</title>
+        <meta name="description" content="Policy2Summary privacy policy. We do not store your documents." />
       </Head>
 
       {/* Nav */}
@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <a href="/" className="font-bold text-slate-900">InsurEase</a>
+          <a href="/" className="font-bold text-slate-900">Policy2Summary</a>
         </div>
       </nav>
 
@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-slate-900 mb-3">1. No Data Collection</h2>
             <p className="text-slate-600 leading-relaxed mb-3">
-              InsurEase is designed with privacy at its core. We <strong>do not collect, store, or retain</strong> any documents you upload. All processing happens in your browser and in temporary server memory only — files are deleted immediately after analysis.
+              Policy2Summary is designed with privacy at its core. We <strong>do not collect, store, or retain</strong> any documents you upload. All processing happens in your browser and in temporary server memory only — files are deleted immediately after analysis.
             </p>
           </section>
 
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-xl font-semibold text-slate-900 mb-3">4. No Account Required</h2>
             <p className="text-slate-600 leading-relaxed mb-3">
-              InsurEase does not require sign-up, login, or any personal information. You can use the tool immediately without providing your name, email, phone number, or any other identifying information.
+              Policy2Summary does not require sign-up, login, or any personal information. You can use the tool immediately without providing your name, email, phone number, or any other identifying information.
             </p>
           </section>
 
@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
 
       <footer className="border-t border-slate-200 bg-slate-50 py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center text-sm text-slate-500">
-          InsurEase — Free AI Insurance Document Reader
+          Policy2Summary — Free AI Insurance Document Reader
         </div>
       </footer>
     </div>

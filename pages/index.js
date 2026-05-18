@@ -466,7 +466,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <Head>
-        <title>InsurEase — AI Insurance Document Reader</title>
+        <title>Policy2Summary — AI Insurance Document Reader</title>
         <meta name="description" content="Upload your insurance certificates and get instant plain-English summaries. No signup, no data stored." />
       </Head>
 
@@ -480,7 +480,7 @@ export default function Home() {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">InsurEase</h1>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Policy2Summary</h1>
             </div>
           </div>
           {analyzedCount > 0 && (
@@ -986,7 +986,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <span className="font-bold text-slate-900">InsurEase</span>
+                <span className="font-bold text-slate-900">Policy2Summary</span>
               </div>
               <p className="text-sm text-slate-500">AI-powered insurance document reader. Making insurance understandable for everyone.</p>
             </div>
@@ -1010,7 +1010,7 @@ export default function Home() {
           </div>
           <div className="border-t border-slate-100 pt-6 text-center">
             <p className="text-sm text-slate-400 mb-3">
-              InsurEase — Free tool. No data stored. Documents processed in memory only.
+              Policy2Summary — Free tool. No data stored. Documents processed in memory only.
             </p>
             <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
               <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
