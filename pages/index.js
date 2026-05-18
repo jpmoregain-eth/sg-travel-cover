@@ -724,6 +724,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Disclaimer Banner */}
+      <section className="bg-amber-50 border-y border-amber-200 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-start gap-3">
+          <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-sm text-amber-800 font-medium">Important: AI-generated summaries for reference only</p>
+            <p className="text-xs text-amber-600 mt-0.5">
+              Always verify details with your insurer before making decisions. <a href="/disclaimer" className="underline hover:text-amber-800">Read full disclaimer</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Upload Section */}
       <section id="upload-section" className="py-16 sm:py-20 bg-gradient-to-b from-emerald-50 to-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -994,9 +1009,16 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-slate-100 pt-6 text-center">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 mb-3">
               InsurEase — Free tool. No data stored. Documents processed in memory only.
             </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
+              <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+              <span className="text-slate-300">|</span>
+              <a href="/terms" className="hover:text-slate-600 transition-colors">Terms of Service</a>
+              <span className="text-slate-300">|</span>
+              <a href="/disclaimer" className="hover:text-slate-600 transition-colors">Disclaimer</a>
+            </div>
           </div>
         </div>
       </footer>
