@@ -613,14 +613,7 @@ export default function Home() {
             {/* Step 3 */}
             <div className="text-center">
               <div className="relative mx-auto w-48 h-48 mb-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-xl bg-white shadow-md flex items-center justify-center mx-auto mb-2">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <p className="text-xs text-slate-400">Step 3 Image Placeholder</p>
-                </div>
+                <img src="/images/step3-summary.jpg" alt="Policy summary output" className="w-full h-full object-cover" />
                 <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">3</div>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 mb-2">Get Your Summary</h3>
