@@ -554,18 +554,11 @@ export default function Home() {
               </div>
             </div>
             <div className="relative">
-              {/* Placeholder Hero Image */}
-              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-100 to-slate-100 aspect-[4/3] flex items-center justify-center border border-slate-200">
-                <div className="text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-medium text-slate-500">Hero Image Placeholder</p>
-                  <p className="text-xs text-slate-400 mt-1">Generate: AI reading insurance document illustration</p>
-                </div>
-              </div>
+              <img
+                src="/images/hero-image.jpg"
+                alt="AI assistant transforming messy insurance documents into clear summaries"
+                className="rounded-2xl w-full h-auto border border-slate-200 shadow-lg"
+              />
               {/* Floating badge */}
               <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg border border-slate-100 p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
