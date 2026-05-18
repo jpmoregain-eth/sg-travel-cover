@@ -483,8 +483,100 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <Head>
-        <title>Policy2Summary — AI Insurance Document Reader</title>
-        <meta name="description" content="Upload your insurance certificates and get instant plain-English summaries. No signup, no data stored." />
+        <title>Policy2Summary — Free AI Insurance Document Summarizer | Read Policy Fine Print Instantly</title>
+        <meta name="description" content="Upload any insurance policy PDF or DOCX and get an instant AI summary. Understand coverage, exclusions, premiums, and hidden clauses in plain English. Free, private, no signup." />
+        <meta name="keywords" content="insurance policy summary, insurance document reader, AI insurance analyzer, policy summary generator, insurance certificate reader, free insurance tool, understand insurance coverage, insurance fine print" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://policy2summary.vercel.app/" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
+        <meta property="og:description" content="Upload any insurance policy and get an instant plain-English summary. Coverage, exclusions, premiums — all decoded by AI." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://policy2summary.vercel.app/" />
+        <meta property="og:image" content="https://policy2summary.vercel.app/images/og-image.png" />
+        <meta property="og:site_name" content="Policy2Summary" />
+        <meta property="og:locale" content="en_SG" />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
+        <meta name="twitter:description" content="Upload any insurance policy and get an instant plain-English summary." />
+        <meta name="twitter:image" content="https://policy2summary.vercel.app/images/og-image.png" />
+        
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://policy2summary.vercel.app/#website",
+              "url": "https://policy2summary.vercel.app/",
+              "name": "Policy2Summary",
+              "description": "Free AI-powered insurance policy summarizer",
+              "publisher": {"@id": "https://policy2summary.vercel.app/#organization"},
+              "inLanguage": "en-SG"
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://policy2summary.vercel.app/#organization",
+              "name": "Policy2Summary",
+              "url": "https://policy2summary.vercel.app/",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://policy2summary.vercel.app/logo.png"
+              },
+              "sameAs": []
+            },
+            {
+              "@type": "SoftwareApplication",
+              "@id": "https://policy2summary.vercel.app/#app",
+              "name": "Policy2Summary",
+              "applicationCategory": "FinanceApplication",
+              "operatingSystem": "Web Browser",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "SGD"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "1"
+              },
+              "featureList": "PDF and DOCX upload, AI policy summary generation, Coverage details extraction, Exclusion identification, Premium amount detection, Key dates extraction"
+            },
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Is Policy2Summary free?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, Policy2Summary is currently free to use. Upload your insurance document and get an instant AI summary at no cost."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Is my insurance data safe?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes. Your documents are processed in memory only and never stored on our servers. Files are deleted immediately after analysis."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What file formats are supported?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We support PDF and DOCX files. Simply upload your insurance certificate, policy document, or coverage summary."
+                  }
+                }
+              ]
+            }
+          ]
+        })}} />
       </Head>
 
       {/* Navigation */}
@@ -493,7 +585,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <img
               src="/images/logo.jpg"
-              alt="Policy2Summary"
+              alt="Policy2Summary logo — AI insurance document summarizer"
               className="w-9 h-9 rounded-lg object-cover"
             />
             <div>

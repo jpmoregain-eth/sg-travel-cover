@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://policy2summary.vercel.app/sitemap.xml

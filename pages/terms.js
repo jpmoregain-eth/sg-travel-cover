@@ -5,8 +5,14 @@ export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <Head>
-        <title>Terms of Service — Policy2Summary</title>
-        <meta name="description" content="Terms of service for using Policy2Summary." />
+        <title>Terms of Service — Policy2Summary | Insurance Document Analyzer</title>
+        <meta name="description" content="Terms of service for using Policy2Summary. By using our AI insurance document summarizer, you agree to these terms." />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://policy2summary.vercel.app/terms" />
+        <meta property="og:title" content="Terms of Service — Policy2Summary" />
+        <meta property="og:description" content="Terms and conditions for using Policy2Summary." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://policy2summary.vercel.app/terms" />
       </Head>
 
       <nav className="border-b border-slate-200 bg-white sticky top-0 z-50">
