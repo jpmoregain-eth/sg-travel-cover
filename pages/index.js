@@ -504,13 +504,15 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50 to-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-12 sm:pt-12 sm:pb-16">
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Free Tool — No Signup Required
+            </div>
+          </div>
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-6">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Free Tool — No Signup Required
-              </div>
               <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 leading-tight mb-6">
                 Understand Your Insurance in{' '}
                 <span className="text-emerald-600">Plain English</span>
@@ -577,9 +579,9 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 sm:py-20 bg-white">
+      <section id="how-it-works" className="py-8 sm:py-10 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">How It Works</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Three simple steps to understand any insurance document — no insurance background needed.
