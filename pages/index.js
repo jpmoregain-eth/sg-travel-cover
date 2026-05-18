@@ -305,58 +305,75 @@ export default function Home() {
       csv += `Insurer,"${(a.insurer || '').replace(/"/g, '""')}"\n`;
       csv += `Policy Number,"${(a.policy_number || '').replace(/"/g, '""')}"\n`;
       csv += `Policyholder,"${(a.policyholder || '').replace(/"/g, '""')}"\n`;
+      
+      // Premium Amounts
       if (a.premium) {
         csv += `Premium Amount,"${String(a.premium.amount || '').replace(/"/g, '""')}"\n`;
         csv += `Premium Frequency,"${String(a.premium.frequency || '').replace(/"/g, '""')}"\n`;
         csv += `Annual Total,"${String(a.premium.total_annual || '').replace(/"/g, '""')}"\n`;
       }
+      
+      // Key Dates
       if (a.key_dates) {
         csv += `Issue Date,"${String(a.key_dates.issue_date || '').replace(/"/g, '""')}"\n`;
         csv += `Commencement Date,"${String(a.key_dates.commencement_date || '').replace(/"/g, '""')}"\n`;
-        csv += `Maturity Date,"${String(a.key_dates.maturity_date || '').replace(/"/g, '""')}"\n`;
+        csv += `Expiry Date,"${String(a.key_dates.expiry_date || '').replace(/"/g, '""')}"\n`;
         csv += `Renewal Date,"${String(a.key_dates.renewal_date || '').replace(/"/g, '""')}"\n`;
       }
-      if (a.maturity) {
-        csv += `Maturity Type,"${String(a.maturity.type || '').replace(/"/g, '""')}"\n`;
-        csv += `Term Years,"${String(a.maturity.term_years || '').replace(/"/g, '""')}"\n`;
-        csv += `Surrender Notes,"${String(a.maturity.surrender_value_notes || '').replace(/"/g, '""')}"\n`;
+      
+      // Coverage Details
+      if (a.coverage_details?.description) {
+        csv += `Coverage Description,"${a.coverage_details.description.replace(/"/g, '""')}"\n`;
       }
-      if (a.coverage?.medical_expenses) csv += `Medical Expenses,"${String(a.coverage.medical_expenses).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.trip_cancellation) csv += `Trip Cancellation,"${String(a.coverage.trip_cancellation).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.baggage_loss) csv += `Baggage Loss,"${String(a.coverage.baggage_loss).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.personal_accident) csv += `Personal Accident,"${String(a.coverage.personal_accident).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.travel_delay) csv += `Travel Delay,"${String(a.coverage.travel_delay).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.vehicle_sum_insured) csv += `Sum Insured / Market Value,"${String(a.coverage.vehicle_sum_insured).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.third_party_liability) csv += `Third-Party Liability,"${String(a.coverage.third_party_liability).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.own_damage_excess) csv += `Own Damage Excess,"${String(a.coverage.own_damage_excess).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.unnamed_driver_excess) csv += `Unnamed Driver Excess,"${String(a.coverage.unnamed_driver_excess).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.young_driver_excess) csv += `Young/Inexperienced Driver Excess,"${String(a.coverage.young_driver_excess).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.windscreen_excess) csv += `Windscreen Excess,"${String(a.coverage.windscreen_excess).replace(/"/g, '""')}"\n`;
-      if (a.coverage?.main_benefits?.length) {
-        csv += `Other Coverage,"${a.coverage.main_benefits.join('; ').replace(/"/g, '""')}"\n`;
+      if (a.coverage_details?.main_coverage?.length) {
+        csv += `Main Coverage,"${a.coverage_details.main_coverage.join('; ').replace(/"/g, '""')}"\n`;
       }
-      if (a.coverage?.riders?.length) {
-        csv += `Riders,"${a.coverage.riders.join('; ').replace(/"/g, '""')}"\n`;
+      if (a.coverage_details?.total_coverage_value) {
+        csv += `Total Coverage Value,"${String(a.coverage_details.total_coverage_value).replace(/"/g, '""')}"\n`;
       }
-      if (a.payout_criteria?.length) {
-        csv += `Payout Criteria,"${a.payout_criteria.join('; ').replace(/"/g, '""')}"\n`;
+      if (a.coverage_details?.limits?.length) {
+        csv += `Limits / Sub-limits,"${a.coverage_details.limits.join('; ').replace(/"/g, '""')}"\n`;
       }
-      if (a.deductibles_excess?.length) {
-        csv += `Deductibles / Excess,"${a.deductibles_excess.join('; ').replace(/"/g, '""')}"\n`;
+      if (a.coverage_details?.riders_add_ons?.length) {
+        csv += `Add-ons / Riders,"${a.coverage_details.riders_add_ons.join('; ').replace(/"/g, '""')}"\n`;
       }
-      if (a.exclusions?.length) {
-        csv += `Exclusions,"${a.exclusions.join('; ').replace(/"/g, '""')}"\n`;
+      
+      // Exclusions & Limitations
+      if (a.exclusions_and_limitations?.exclusions?.length) {
+        csv += `Exclusions,"${a.exclusions_and_limitations.exclusions.join('; ').replace(/"/g, '""')}"\n`;
       }
-      if (a.investment_linked?.is_ilp) {
-        csv += `ILP Allocation,"${(a.investment_linked.allocation || '').replace(/"/g, '""')}"\n`;
-        csv += `ILP Returns,"${(a.investment_linked.projected_returns || '').replace(/"/g, '""')}"\n`;
-        if (a.investment_linked.funds?.length) {
-          csv += `ILP Funds,"${a.investment_linked.funds.join('; ').replace(/"/g, '""')}"\n`;
-        }
+      if (a.exclusions_and_limitations?.limitations?.length) {
+        csv += `Limitations,"${a.exclusions_and_limitations.limitations.join('; ').replace(/"/g, '""')}"\n`;
       }
-      if (a.warnings?.length) {
-        csv += `Warnings,"${a.warnings.join('; ').replace(/"/g, '""')}"\n`;
+      if (a.exclusions_and_limitations?.waiting_periods?.length) {
+        csv += `Waiting Periods,"${a.exclusions_and_limitations.waiting_periods.join('; ').replace(/"/g, '""')}"\n`;
       }
+      if (a.exclusions_and_limitations?.special_conditions?.length) {
+        csv += `Special Conditions,"${a.exclusions_and_limitations.special_conditions.join('; ').replace(/"/g, '""')}"\n`;
+      }
+      
+      // Terms & Conditions
+      if (a.terms_and_conditions?.policy_term) {
+        csv += `Policy Term,"${a.terms_and_conditions.policy_term.replace(/"/g, '""')}"\n`;
+      }
+      if (a.terms_and_conditions?.renewal_terms) {
+        csv += `Renewal Terms,"${a.terms_and_conditions.renewal_terms.replace(/"/g, '""')}"\n`;
+      }
+      if (a.terms_and_conditions?.cancellation_terms) {
+        csv += `Cancellation Terms,"${a.terms_and_conditions.cancellation_terms.replace(/"/g, '""')}"\n`;
+      }
+      if (a.terms_and_conditions?.claims_process) {
+        csv += `Claims Process,"${a.terms_and_conditions.claims_process.replace(/"/g, '""')}"\n`;
+      }
+      if (a.terms_and_conditions?.grace_period) {
+        csv += `Grace Period,"${a.terms_and_conditions.grace_period.replace(/"/g, '""')}"\n`;
+      }
+      
+      // Warnings & Gaps
+      if (a.warnings_and_gaps?.length) {
+        csv += `Warnings / Gaps,"${a.warnings_and_gaps.join('; ').replace(/"/g, '""')}"\n`;
+      }
+      
       csv += `Summary,"${(a.summary || '').replace(/"/g, '""')}"\n`;
       csv += `\n`;
     });
@@ -1011,7 +1028,7 @@ function AnalysisResults({ analysis }) {
           <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 className="font-semibold text-emerald-800 text-sm">Summary</h3>
+          <h3 className="font-semibold text-emerald-800 text-sm">Policy Summary</h3>
         </div>
         <p className="text-slate-700 text-sm leading-relaxed">{analysis.summary}</p>
         <div className="flex flex-wrap gap-2 mt-4">
@@ -1025,23 +1042,23 @@ function AnalysisResults({ analysis }) {
               {analysis.insurer}
             </span>
           )}
-          {analysis.maturity?.type && (
+          {analysis.policy_number && (
             <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-              {analysis.maturity.type}
+              #{analysis.policy_number}
             </span>
           )}
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5">
-        {/* Premium */}
-        {analysis.premium && (
+        {/* Premium Amounts */}
+        {analysis.premium && (analysis.premium.amount || analysis.premium.frequency || analysis.premium.total_annual) && (
           <div className="bg-white border border-slate-200 rounded-xl p-5">
             <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
               <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Premium
+              Premium Amounts
             </h3>
             <div className="space-y-2 text-sm">
               {analysis.premium.amount && (
@@ -1058,7 +1075,7 @@ function AnalysisResults({ analysis }) {
               )}
               {analysis.premium.total_annual && (
                 <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                  <span className="text-slate-500">Annual</span>
+                  <span className="text-slate-500">Annual Total</span>
                   <span className="text-emerald-600 font-semibold">{analysis.premium.total_annual}</span>
                 </div>
               )}
@@ -1088,10 +1105,10 @@ function AnalysisResults({ analysis }) {
                   <span className="text-slate-700">{analysis.key_dates.commencement_date}</span>
                 </div>
               )}
-              {analysis.key_dates.maturity_date && (
+              {analysis.key_dates.expiry_date && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Matures</span>
-                  <span className="text-blue-600 font-medium">{analysis.key_dates.maturity_date}</span>
+                  <span className="text-slate-500">Expires</span>
+                  <span className="text-red-600 font-medium">{analysis.key_dates.expiry_date}</span>
                 </div>
               )}
               {analysis.key_dates.renewal_date && (
@@ -1105,239 +1122,175 @@ function AnalysisResults({ analysis }) {
         )}
       </div>
 
-      {/* Coverage Amounts */}
-      {(analysis.coverage?.medical_expenses || analysis.coverage?.trip_cancellation || analysis.coverage?.baggage_loss || analysis.coverage?.personal_accident || analysis.coverage?.travel_delay) && (
+      {/* Coverage Details */}
+      {(analysis.coverage_details?.main_coverage?.length || analysis.coverage_details?.description) && (
         <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-emerald-800 mb-4 flex items-center gap-2">
             <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            Coverage Limits
+            Coverage Details
           </h3>
-          <div className="space-y-2.5 text-sm">
-            {analysis.coverage.medical_expenses && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Medical Expenses</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.medical_expenses}</span>
-              </div>
-            )}
-            {analysis.coverage.trip_cancellation && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Trip Cancellation</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.trip_cancellation}</span>
-              </div>
-            )}
-            {analysis.coverage.baggage_loss && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Baggage Loss</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.baggage_loss}</span>
-              </div>
-            )}
-            {analysis.coverage.personal_accident && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Personal Accident</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.personal_accident}</span>
-              </div>
-            )}
-            {analysis.coverage.travel_delay && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Travel Delay</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.travel_delay}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Coverage Benefits List */}
-      {analysis.coverage?.main_benefits?.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Other Coverage
-          </h3>
-          <ul className="space-y-2">
-            {analysis.coverage.main_benefits.map((benefit, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                <span className="text-slate-700">{benefit}</span>
-              </li>
-            ))}
-          </ul>
-          {analysis.coverage.riders?.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-500 mb-2 font-medium">Riders</p>
-              {analysis.coverage.riders.map((rider, i) => (
-                <p key={i} className="text-xs text-slate-600">• {rider}</p>
-              ))}
+          {analysis.coverage_details?.description && (
+            <p className="text-sm text-slate-700 leading-relaxed mb-4">{analysis.coverage_details.description}</p>
+          )}
+          {analysis.coverage_details?.main_coverage?.length > 0 && (
+            <div className="space-y-2.5 text-sm">
+              {analysis.coverage_details.main_coverage.map((item, i) => {
+                const parts = item.split(':');
+                return (
+                  <div key={i} className="flex justify-between py-1">
+                    <span className="text-slate-600 flex-1">{parts[0]}</span>
+                    <span className="text-slate-900 font-semibold ml-4">{parts[1] ? parts[1].trim() : ''}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {analysis.coverage_details?.total_coverage_value && (
+            <div className="mt-4 pt-3 border-t border-emerald-200 flex justify-between">
+              <span className="text-emerald-800 font-medium text-sm">Total Coverage Value</span>
+              <span className="text-emerald-700 font-bold text-sm">{analysis.coverage_details.total_coverage_value}</span>
+            </div>
+          )}
+          {analysis.coverage_details?.limits?.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Limits & Sub-limits</h4>
+              <ul className="space-y-1 text-sm text-slate-600 list-disc list-inside">
+                {analysis.coverage_details.limits.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {analysis.coverage_details?.riders_add_ons?.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Add-ons & Riders</h4>
+              <ul className="space-y-1 text-sm text-slate-600 list-disc list-inside">
+                {analysis.coverage_details.riders_add_ons.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
       )}
 
-      {/* Car Insurance Coverage */}
-      {(analysis.coverage?.vehicle_sum_insured || analysis.coverage?.third_party_liability || analysis.coverage?.own_damage_excess || analysis.coverage?.unnamed_driver_excess || analysis.coverage?.young_driver_excess || analysis.coverage?.windscreen_excess) && (
-        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl p-5">
+      {/* Exclusions & Limitations */}
+      {(analysis.exclusions_and_limitations?.exclusions?.length ||
+        analysis.exclusions_and_limitations?.limitations?.length ||
+        analysis.exclusions_and_limitations?.waiting_periods?.length ||
+        analysis.exclusions_and_limitations?.special_conditions?.length) && (
+        <div className="bg-white border border-red-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-red-800 mb-4 flex items-center gap-2">
+            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M7 21l5.618-4.017A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Exclusions & Limitations
+          </h3>
+          {analysis.exclusions_and_limitations?.exclusions?.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">What's NOT Covered</h4>
+              <ul className="space-y-1.5 text-sm text-slate-700 list-disc list-inside">
+                {analysis.exclusions_and_limitations.exclusions.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {analysis.exclusions_and_limitations?.limitations?.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Limitations</h4>
+              <ul className="space-y-1.5 text-sm text-slate-600 list-disc list-inside">
+                {analysis.exclusions_and_limitations.limitations.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {analysis.exclusions_and_limitations?.waiting_periods?.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Waiting Periods</h4>
+              <ul className="space-y-1.5 text-sm text-slate-600 list-disc list-inside">
+                {analysis.exclusions_and_limitations.waiting_periods.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {analysis.exclusions_and_limitations?.special_conditions?.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Special Conditions</h4>
+              <ul className="space-y-1.5 text-sm text-slate-600 list-disc list-inside">
+                {analysis.exclusions_and_limitations.special_conditions.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Terms & Conditions */}
+      {(analysis.terms_and_conditions?.policy_term ||
+        analysis.terms_and_conditions?.renewal_terms ||
+        analysis.terms_and_conditions?.cancellation_terms ||
+        analysis.terms_and_conditions?.claims_process ||
+        analysis.terms_and_conditions?.grace_period) && (
+        <div className="bg-white border border-blue-200 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-blue-800 mb-4 flex items-center gap-2">
             <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Car Coverage & Excess
+            Terms & Conditions
           </h3>
-          <div className="space-y-2.5 text-sm">
-            {analysis.coverage.vehicle_sum_insured && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Sum Insured / Market Value</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.vehicle_sum_insured}</span>
+          <div className="space-y-4 text-sm">
+            {analysis.terms_and_conditions?.policy_term && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Policy Term</h4>
+                <p className="text-slate-700">{analysis.terms_and_conditions.policy_term}</p>
               </div>
             )}
-            {analysis.coverage.third_party_liability && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Third-Party Liability</span>
-                <span className="text-slate-900 font-semibold">{analysis.coverage.third_party_liability}</span>
+            {analysis.terms_and_conditions?.renewal_terms && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Renewal Terms</h4>
+                <p className="text-slate-700">{analysis.terms_and_conditions.renewal_terms}</p>
               </div>
             )}
-            {analysis.coverage.own_damage_excess && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Own Damage Excess</span>
-                <span className="text-amber-600 font-semibold">{analysis.coverage.own_damage_excess}</span>
+            {analysis.terms_and_conditions?.cancellation_terms && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Cancellation</h4>
+                <p className="text-slate-700">{analysis.terms_and_conditions.cancellation_terms}</p>
               </div>
             )}
-            {analysis.coverage.unnamed_driver_excess && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Unnamed Driver Excess</span>
-                <span className="text-amber-600 font-semibold">{analysis.coverage.unnamed_driver_excess}</span>
+            {analysis.terms_and_conditions?.claims_process && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Claims Process</h4>
+                <p className="text-slate-700">{analysis.terms_and_conditions.claims_process}</p>
               </div>
             )}
-            {analysis.coverage.young_driver_excess && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Young/Inexperienced Driver Excess</span>
-                <span className="text-amber-600 font-semibold">{analysis.coverage.young_driver_excess}</span>
-              </div>
-            )}
-            {analysis.coverage.windscreen_excess && (
-              <div className="flex justify-between py-1">
-                <span className="text-slate-600">Windscreen Excess</span>
-                <span className="text-amber-600 font-semibold">{analysis.coverage.windscreen_excess}</span>
+            {analysis.terms_and_conditions?.grace_period && (
+              <div>
+                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Grace Period</h4>
+                <p className="text-slate-700">{analysis.terms_and_conditions.grace_period}</p>
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Payout Criteria */}
-      {analysis.payout_criteria?.length > 0 && (
-        <div className="bg-white border border-emerald-100 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-emerald-700 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
-            Payout Criteria
-          </h3>
-          <ul className="space-y-2">
-            {analysis.payout_criteria.map((c, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
-                <span className="text-slate-700">{c}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Deductibles / Excess */}
-      {analysis.deductibles_excess?.length > 0 && (
-        <div className="bg-white border border-amber-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Deductibles & Excess
-          </h3>
-          <ul className="space-y-2">
-            {analysis.deductibles_excess.map((d, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                <span className="text-slate-700">{d}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Exclusions */}
-      {analysis.exclusions?.length > 0 && (
-        <div className="bg-white border border-red-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-red-700 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            Exclusions
-          </h3>
-          <ul className="space-y-2">
-            {analysis.exclusions.map((ex, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
-                <span className="text-slate-600">{ex}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* ILP */}
-      {analysis.investment_linked?.is_ilp && (
-        <div className="bg-gradient-to-br from-purple-50 to-white border border-purple-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-purple-700 mb-3 flex items-center gap-2">
-            <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            Investment-Linked Details
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm">
-            {analysis.investment_linked.allocation && (
-              <div>
-                <span className="text-slate-500">Allocation</span>
-                <p className="text-slate-800 mt-0.5">{analysis.investment_linked.allocation}</p>
-              </div>
-            )}
-            {analysis.investment_linked.projected_returns && (
-              <div>
-                <span className="text-slate-500">Projected Returns</span>
-                <p className="text-emerald-600 font-medium mt-0.5">{analysis.investment_linked.projected_returns}</p>
-              </div>
-            )}
-          </div>
-          {analysis.investment_linked.funds?.length > 0 && (
-            <div className="mt-3">
-              <span className="text-xs text-slate-500 mb-2 block">Funds</span>
-              <div className="flex flex-wrap gap-1.5">
-                {analysis.investment_linked.funds.map((f, i) => (
-                  <span key={i} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">{f}</span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       {/* Warnings */}
-      {analysis.warnings?.length > 0 && (
+      {analysis.warnings_and_gaps?.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-amber-700 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
             <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            Important Notes
+            ⚠️ Warnings & Gaps
           </h3>
-          <ul className="space-y-2">
-            {analysis.warnings.map((w, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                <span className="text-slate-700">{w}</span>
-              </li>
+          <ul className="space-y-1.5 text-sm text-amber-800 list-disc list-inside">
+            {analysis.warnings_and_gaps.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
         </div>

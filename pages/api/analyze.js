@@ -15,7 +15,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'AI service not configured' });
     }
 
-    const systemPrompt = `You are an insurance document analyzer. Extract key information from the provided insurance certificate/policy text and return ONLY a JSON object with this exact structure:
+    const systemPrompt = `You are an insurance document analyzer that produces a Policy Summary following the industry-standard Insuranceopedia format. Extract key information from the provided insurance certificate/policy text and return ONLY a JSON object with this exact structure:
 
 {
   "policy_type": "Life / Health / Car / Home / Travel / Investment-Linked / Other",
@@ -24,60 +24,53 @@ export default async function handler(req, res) {
   "policyholder": "Name of insured person",
   "premium": {
     "amount": "amount with currency",
-    "frequency": "Monthly / Quarterly / Annual",
-    "total_annual": "calculated annual amount if available"
+    "frequency": "Monthly / Quarterly / Annual / One-time",
+    "total_annual": "calculated annual amount if available",
+    "currency": "Currency code or symbol"
   },
-  "coverage": {
-    "medical_expenses": "For health/travel: overseas medical coverage amount with currency",
-    "trip_cancellation": "For travel: trip cancellation/interruption coverage amount",
-    "baggage_loss": "For travel: baggage/personal belongings coverage amount",
-    "personal_accident": "For travel: personal accident / death coverage amount",
-    "travel_delay": "For travel: delay coverage amount and threshold (e.g., after X hours)",
-    "vehicle_sum_insured": "For car: sum insured / market value with currency",
-    "third_party_liability": "For car: third-party bodily injury and property damage limits",
-    "own_damage_excess": "For car: own damage claim excess amount",
-    "unnamed_driver_excess": "For car: additional excess for unnamed drivers",
-    "young_driver_excess": "For car: additional excess for young/inexperienced drivers",
-    "windscreen_excess": "For car: windscreen claim excess amount",
-    "main_benefits": ["All other coverage items with specific amounts/limits"],
-    "riders": ["Add-on coverage with amounts"]
+  "coverage_details": {
+    "description": "A plain-English paragraph describing what this policy covers (2-3 sentences)",
+    "main_coverage": ["List each major coverage item with specific dollar amounts — e.g., 'Medical expenses: S$50,000', 'Trip cancellation: S$5,000', 'Third-party liability: S$500,000'"],
+    "limits": ["List coverage limits and sub-limits found"],
+    "riders_add_ons": ["Any add-on coverage purchased with amounts"],
+    "total_coverage_value": "Sum total of coverage amounts if stated"
   },
-  "payout_criteria": ["Specific conditions that trigger payouts — e.g., 'Medical expenses: S$50,000, covers hospitalisation and emergency dental'", "Trip cancellation: S$5,000, covers non-refundable deposits if cancelled for covered reasons"],
-  "deductibles_excess": ["Any excess/deductible amounts per claim type"],
-  "exclusions": ["List what's NOT covered"],
-  "maturity": {
-    "type": "Whole Life / Term / Endowment / ILP / Other",
-    "term_years": "Policy term if applicable",
-    "maturity_date": "Date or age at maturity",
-    "surrender_value_notes": "Any surrender/early withdrawal terms"
+  "exclusions_and_limitations": {
+    "exclusions": ["List what's NOT covered — be specific with conditions"],
+    "limitations": ["Limitations on coverage — e.g., territorial limits, age limits, pre-existing condition clauses"],
+    "waiting_periods": ["Any waiting periods before coverage takes effect"],
+    "special_conditions": ["Conditions that must be met for coverage to apply"]
   },
-  "investment_linked": {
-    "is_ilp": true/false,
-    "allocation": "How premium is split (e.g., 70% insurance, 30% investment)",
-    "funds": ["Names of underlying funds if mentioned"],
-    "projected_returns": "Any projected return rates"
+  "terms_and_conditions": {
+    "policy_term": "Duration of coverage (e.g., '1 year renewable', 'Whole life', 'Term 20 years')",
+    "renewal_terms": "How renewal works, premium changes, notice periods",
+    "cancellation_terms": "Cancellation rights, refunds, notice requirements",
+    "claims_process": "How to file a claim — documentation needed, time limits, contact info",
+    "grace_period": "Grace period for premium payment if mentioned",
+    "jurisdiction": "Governing law / jurisdiction if stated"
   },
   "key_dates": {
     "issue_date": "",
     "commencement_date": "",
-    "maturity_date": "",
+    "expiry_date": "",
     "renewal_date": ""
   },
-  "warnings": ["Any important warnings, gaps, or unusual exclusions"],
-  "summary": "A 2-3 sentence plain-English summary of what this policy does, who it's for, and the total coverage value"
+  "warnings_and_gaps": ["Any important warnings, coverage gaps, unusual exclusions, or gotchas"],
+  "summary": "A 2-3 sentence plain-English summary of what this policy does, who it's for, and the total protection offered"
 }
 
 IMPORTANT EXTRACTION RULES:
-1. ALWAYS extract specific dollar amounts (S$ / $ / USD) for every coverage item found
-2. ALWAYS extract payout criteria — what triggers a claim and how much is paid
-3. ALWAYS extract deductibles/excess amounts per claim type
-4. For travel insurance specifically: extract medical, trip cancellation, baggage, delay, personal accident amounts
-5. For life/health: extract sum assured, critical illness payout amounts, waiting periods
-6. For car insurance: extract third-party liability limits, own damage coverage, excess amounts
-7. For home insurance: extract building contents limit, valuables sub-limits, liability coverage
-8. NEVER leave coverage amounts as generic text — always include the dollar figure if present
-9. If a field is genuinely not in the document, set it to null
-10. Return ONLY valid JSON — no markdown code blocks, no explanations outside the JSON`;
+1. ALWAYS extract specific dollar amounts (S$ / $ / USD / €) for every coverage item found
+2. ALWAYS extract exclusions with specific conditions — not just generic categories
+3. ALWAYS extract waiting periods, renewal terms, and cancellation rights
+4. ALWAYS describe the claims process if mentioned in the document
+5. For travel insurance: extract medical, trip cancellation, baggage, delay, personal accident amounts
+6. For life/health: extract sum assured, critical illness payout, waiting periods, pre-existing exclusions
+7. For car insurance: extract third-party liability, own damage, excess, unnamed driver, NCD
+8. For home insurance: extract building contents, valuables sub-limits, liability coverage
+9. NEVER leave coverage amounts as generic text — always include the dollar figure if present
+10. If a field is genuinely not in the document, set it to null or an empty array
+11. Return ONLY valid JSON — no markdown code blocks, no explanations outside the JSON`;
 
     // Timeout: 8 seconds to stay under Vercel free tier 10s limit
     const controller = new AbortController();
