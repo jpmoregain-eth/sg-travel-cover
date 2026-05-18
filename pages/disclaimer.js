@@ -8,11 +8,11 @@ export default function Disclaimer() {
         <title>Disclaimer — Policy2Summary | Insurance Document Analysis Tool</title>
         <meta name="description" content="Policy2Summary disclaimer. Our AI summaries are for informational purposes only and do not replace professional insurance advice." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://policy2summary.vercel.app/disclaimer" />
+        <link rel="canonical" href="https://www.policy2summary.com/disclaimer" />
         <meta property="og:title" content="Disclaimer — Policy2Summary" />
         <meta property="og:description" content="Important disclaimers about using Policy2Summary AI insurance analysis." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://policy2summary.vercel.app/disclaimer" />
+        <meta property="og:url" content="https://www.policy2summary.com/disclaimer" />
       </Head>
 
       <nav className="border-b border-slate-200 bg-white sticky top-0 z-50">

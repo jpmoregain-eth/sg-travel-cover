@@ -487,14 +487,14 @@ export default function Home() {
         <meta name="description" content="Upload any insurance policy PDF or DOCX and get an instant AI summary. Understand coverage, exclusions, premiums, and hidden clauses in plain English. Free, private, no signup." />
         <meta name="keywords" content="insurance policy summary, insurance document reader, AI insurance analyzer, policy summary generator, insurance certificate reader, free insurance tool, understand insurance coverage, insurance fine print" />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://policy2summary.vercel.app/" />
+        <link rel="canonical" href="https://www.policy2summary.com/" />
         
         {/* Open Graph */}
         <meta property="og:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
         <meta property="og:description" content="Upload any insurance policy and get an instant plain-English summary. Coverage, exclusions, premiums — all decoded by AI." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://policy2summary.vercel.app/" />
-        <meta property="og:image" content="https://policy2summary.vercel.app/images/og-image.png" />
+        <meta property="og:url" content="https://www.policy2summary.com/" />
+        <meta property="og:image" content="https://www.policy2summary.com/images/og-image.png" />
         <meta property="og:site_name" content="Policy2Summary" />
         <meta property="og:locale" content="en_SG" />
         
@@ -502,7 +502,7 @@ export default function Home() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
         <meta name="twitter:description" content="Upload any insurance policy and get an instant plain-English summary." />
-        <meta name="twitter:image" content="https://policy2summary.vercel.app/images/og-image.png" />
+        <meta name="twitter:image" content="https://www.policy2summary.com/images/og-image.png" />
         
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({
@@ -510,27 +510,27 @@ export default function Home() {
           "@graph": [
             {
               "@type": "WebSite",
-              "@id": "https://policy2summary.vercel.app/#website",
-              "url": "https://policy2summary.vercel.app/",
+              "@id": "https://www.policy2summary.com/#website",
+              "url": "https://www.policy2summary.com/",
               "name": "Policy2Summary",
               "description": "Free AI-powered insurance policy summarizer",
-              "publisher": {"@id": "https://policy2summary.vercel.app/#organization"},
+              "publisher": {"@id": "https://www.policy2summary.com/#organization"},
               "inLanguage": "en-SG"
             },
             {
               "@type": "Organization",
-              "@id": "https://policy2summary.vercel.app/#organization",
+              "@id": "https://www.policy2summary.com/#organization",
               "name": "Policy2Summary",
-              "url": "https://policy2summary.vercel.app/",
+              "url": "https://www.policy2summary.com/",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://policy2summary.vercel.app/logo.png"
+                "url": "https://www.policy2summary.com/logo.png"
               },
               "sameAs": []
             },
             {
               "@type": "SoftwareApplication",
-              "@id": "https://policy2summary.vercel.app/#app",
+              "@id": "https://www.policy2summary.com/#app",
               "name": "Policy2Summary",
               "applicationCategory": "FinanceApplication",
               "operatingSystem": "Web Browser",

@@ -8,11 +8,11 @@ export default function PrivacyPolicy() {
         <title>Privacy Policy — Policy2Summary | Insurance Document Summarizer</title>
         <meta name="description" content="Policy2Summary privacy policy. We do not store your uploaded insurance documents. All processing is done in-memory and files are deleted immediately after analysis." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://policy2summary.vercel.app/privacy" />
+        <link rel="canonical" href="https://www.policy2summary.com/privacy" />
         <meta property="og:title" content="Privacy Policy — Policy2Summary" />
         <meta property="og:description" content="How Policy2Summary handles your insurance documents and data." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://policy2summary.vercel.app/privacy" />
+        <meta property="og:url" content="https://www.policy2summary.com/privacy" />
       </Head>
 
       {/* Nav */}
