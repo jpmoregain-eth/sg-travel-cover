@@ -729,7 +729,7 @@ export default function Home() {
                 <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">3</div>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 mb-2">Get Your Summary</h3>
-              <p className="text-slate-600">Receive a clear, structured breakdown. Export to PDF, compare multiple policies, and make informed decisions.<span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">PDF Coming Soon</span></p>
+              <p className="text-slate-600">Receive a clear, structured breakdown of each policy. Export analysis reports and make informed decisions.<span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">PDF Coming Soon</span></p>
             </div>
           </div>
         </div>
@@ -833,7 +833,7 @@ export default function Home() {
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Upload Your Documents</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Upload up to 5 policies to compare side by side. We accept PDF, Word, and text files.
+              Upload up to 5 policies for individual AI analysis. We accept PDF, Word, and text files.
             </p>
           </div>
 
