@@ -114,7 +114,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${API_KEY}`
       },
       body: JSON.stringify({
-        model: 'agnes-1.5-pro',
+        model: 'agnes-1.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Analyze this insurance document:\n\n${text.substring(0, 8000)}` }
