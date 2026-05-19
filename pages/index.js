@@ -22,6 +22,7 @@ const createEmptyDoc = (id) => ({
   loading: false,
   error: '',
   stage: null,
+  stageMessage: null,
   extractProgress: null,
 });
 
@@ -367,20 +368,96 @@ export default function Home() {
 
   const runExecutiveAnalysis = async (id) => {
     const doc = documents.find(d => d.id === id);
-    if (!doc?.analysis || doc.analysis.raw) {
-      updateDoc(id, { error: 'Please analyze the document first before exporting.' });
+    if (!doc?.extractedText || doc.extractedText.length < 50) {
+      updateDoc(id, { error: 'No text available for analysis.' });
       return;
     }
-    updateDoc(id, { loading: true, error: '', stage: 'pdf_export' });
-    
-    // Small delay to show spinner, then generate PDF from existing analysis
-    setTimeout(() => {
-      generatePdfReport(doc, doc.analysis).then(() => {
-        updateDoc(id, { loading: false, stage: null });
-      }).catch(err => {
-        updateDoc(id, { error: err.message || 'PDF generation failed', loading: false, stage: null });
+
+    const providers = [
+      { name: 'Agnes AI', key: 'agnes' },
+      { name: 'Agnes AI (retry)', key: 'agnes' },
+      { name: 'Kimi AI', key: 'kimi' },
+      { name: 'Kimi AI (retry)', key: 'kimi' }
+    ];
+
+    for (let i = 0; i < providers.length; i++) {
+      const provider = providers[i];
+      updateDoc(id, { 
+        loading: true, 
+        error: '', 
+        stage: 'executive_analysis',
+        stageMessage: `Analyzing with ${provider.name}...`
       });
-    }, 500);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const res = await fetch('/api/analyze-fallback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({ 
+            text: doc.extractedText, 
+            mode: 'executive',
+            provider: provider.key 
+          })
+        });
+
+        clearTimeout(timeoutId);
+        const data = await res.json();
+
+        if (!data.error) {
+          updateDoc(id, { analysis: data.analysis, loading: false, stage: null, stageMessage: null });
+          await generatePdfReport(doc, data.analysis);
+          return; // Success!
+        }
+
+        // Error but retryable
+        if (data.retry && i < providers.length - 1) {
+          updateDoc(id, { 
+            stageMessage: `${provider.name} busy. Waiting 10s before retry...`,
+            loading: true 
+          });
+          await new Promise(r => setTimeout(r, 10000));
+          continue;
+        }
+
+        // Last attempt failed
+        throw new Error(data.error || 'All providers failed');
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        
+        if (err.name === 'AbortError') {
+          if (i < providers.length - 1) {
+            updateDoc(id, { 
+              stageMessage: `${provider.name} timed out. Waiting 10s before retry...`,
+              loading: true 
+            });
+            await new Promise(r => setTimeout(r, 10000));
+            continue;
+          }
+        }
+        
+        if (i < providers.length - 1) {
+          updateDoc(id, { 
+            stageMessage: `${provider.name} error. Waiting 10s before retry...`,
+            loading: true 
+          });
+          await new Promise(r => setTimeout(r, 10000));
+          continue;
+        }
+        
+        updateDoc(id, { 
+          error: 'All AI providers are currently busy. Please try again in a few minutes.', 
+          loading: false, 
+          stage: null,
+          stageMessage: null 
+        });
+        return;
+      }
+    }
   };
 
   const processFileForDoc = async (selectedFile, id, providedPassword = null) => {
@@ -1234,6 +1311,8 @@ export default function Home() {
                         <span>Extracting text from PDF{doc.extractProgress ? ` (${doc.extractProgress})` : ''}...</span>
                       ) : doc.stage === 'analyzing' ? (
                         <span>Analyzing with AI...</span>
+                      ) : doc.stage === 'executive_analysis' ? (
+                        <span>{doc.stageMessage || 'Preparing executive PDF report...'}</span>
                       ) : doc.stage === 'pdf_export' ? (
                         <span>Generating PDF report...</span>
                       ) : (
