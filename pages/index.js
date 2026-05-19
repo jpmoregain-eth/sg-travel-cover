@@ -367,36 +367,20 @@ export default function Home() {
 
   const runExecutiveAnalysis = async (id) => {
     const doc = documents.find(d => d.id === id);
-    if (!doc?.extractedText || doc.extractedText.length < 50) {
-      updateDoc(id, { error: 'No text available for executive analysis.' });
+    if (!doc?.analysis || doc.analysis.raw) {
+      updateDoc(id, { error: 'Please analyze the document first before exporting.' });
       return;
     }
-    updateDoc(id, { loading: true, error: '', stage: 'executive_analysis' });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ text: doc.extractedText, mode: 'executive' })
+    updateDoc(id, { loading: true, error: '', stage: 'pdf_export' });
+    
+    // Small delay to show spinner, then generate PDF from existing analysis
+    setTimeout(() => {
+      generatePdfReport(doc, doc.analysis).then(() => {
+        updateDoc(id, { loading: false, stage: null });
+      }).catch(err => {
+        updateDoc(id, { error: err.message || 'PDF generation failed', loading: false, stage: null });
       });
-
-      clearTimeout(timeoutId);
-      const data = await res.json();
-
-      if (data.error) {
-        updateDoc(id, { error: data.error, loading: false, stage: null });
-      } else {
-        updateDoc(id, { analysis: data.analysis, loading: false, stage: null });
-        await generatePdfReport(doc, data.analysis);
-      }
-    } catch (err) {
-      clearTimeout(timeoutId);
-      updateDoc(id, { error: err.message || 'Executive analysis failed', loading: false, stage: null });
-    }
+    }, 500);
   };
 
   const processFileForDoc = async (selectedFile, id, providedPassword = null) => {
@@ -1250,8 +1234,8 @@ export default function Home() {
                         <span>Extracting text from PDF{doc.extractProgress ? ` (${doc.extractProgress})` : ''}...</span>
                       ) : doc.stage === 'analyzing' ? (
                         <span>Analyzing with AI...</span>
-                      ) : doc.stage === 'executive_analysis' ? (
-                        <span>Preparing executive PDF report...</span>
+                      ) : doc.stage === 'pdf_export' ? (
+                        <span>Generating PDF report...</span>
                       ) : (
                         <span>Processing...</span>
                       )}
