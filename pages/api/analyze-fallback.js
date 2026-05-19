@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       },
       kimi: {
         apiKey: process.env.KIMI_API_KEY || '',
-        baseUrl: 'https://api.moonshot.ai/v1',
+        baseUrl: 'https://api.kimi.ai/v1',
         model: 'kimi-k2.6'
       }
     };
