@@ -757,10 +757,13 @@ export default function Home() {
       loading: true
     });
 
+    let text = '';
+    let arrayBuffer = null;
+    let clonedBuffer = null;
+
     try {
-      let text = '';
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const clonedBuffer = arrayBuffer.slice(0);
+      arrayBuffer = await selectedFile.arrayBuffer();
+      clonedBuffer = arrayBuffer.slice(0);
 
       if (selectedFile.type === 'application/pdf') {
         try {
