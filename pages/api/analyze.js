@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text } = req.body;
+    const { text, mode = 'standard' } = req.body;
     
     if (!text || text.length < 50) {
       return res.status(400).json({ error: 'Insufficient text extracted. Please upload a clearer document.' });
@@ -15,7 +15,44 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'AI service not configured' });
     }
 
-    const systemPrompt = `You are an insurance document analyzer that produces a Policy Summary following the industry-standard Insuranceopedia format. Extract key information from the provided insurance certificate/policy text and return ONLY a JSON object with this exact structure:
+    const systemPrompt = mode === 'executive' 
+      ? `You are a senior insurance analyst and virtual insurance agent. Analyze the provided insurance certificate/policy and produce a comprehensive executive report. Return ONLY a JSON object with this exact structure:
+
+{
+  "executive_summary": "A professional 2-3 paragraph executive summary written as a virtual insurance agent would explain it to a client. Highlight the overall value proposition, key strengths, and any significant concerns.",
+  "policy_overview": {
+    "policy_type": "Life / Health / Car / Home / Travel / Investment-Linked / Other",
+    "insurer": "Company name",
+    "policy_number": "Policy number if found",
+    "policyholder": "Name of insured person",
+    "premium_summary": "Premium amount, frequency, and annual total in one line"
+  },
+  "key_highlights": [
+    "List 5-7 most important highlights — both positive features and potential red flags. Be specific with dollar amounts."
+  ],
+  "coverage_analysis": {
+    "description": "Detailed plain-English explanation of what this policy covers (3-4 sentences)",
+    "main_coverage": ["List each major coverage item with specific amounts"],
+    "riders_and_additions": ["Any add-on coverage purchased"],
+    "total_coverage_value": "Sum total of coverage amounts if stated"
+  },
+  "exclusions_and_warnings": {
+    "critical_exclusions": ["What's NOT covered — most important exclusions first"],
+    "limitations": ["Key limitations that could affect claims"],
+    "waiting_periods": ["Any waiting periods"],
+    "red_flags": ["Warnings or concerning clauses that a client should know about"]
+  },
+  "financial_analysis": {
+    "premium_assessment": "Assessment of whether the premium is reasonable for the coverage provided",
+    "value_score": "High / Medium / Low — rate the overall value proposition",
+    "cost_efficiency_notes": "Notes on premium vs coverage ratio"
+  },
+  "recommendations": [
+    "3-5 actionable recommendations for the policyholder — what to verify, what to ask their agent, what gaps to consider filling"
+  ],
+  "comparison_notes": "How this policy compares to typical market offerings for this policy type (if discernible from the text)"
+}`
+      : `You are an insurance document analyzer that produces a Policy Summary following the industry-standard Insuranceopedia format. Extract key information from the provided insurance certificate/policy text and return ONLY a JSON object with this exact structure:
 
 {
   "policy_type": "Life / Health / Car / Home / Travel / Investment-Linked / Other",
@@ -50,82 +87,68 @@ export default async function handler(req, res) {
     "jurisdiction": "Governing law / jurisdiction if stated"
   },
   "key_dates": {
-    "issue_date": "",
-    "commencement_date": "",
-    "expiry_date": "",
-    "renewal_date": ""
+    "issue_date": "Policy issue date",
+    "commencement_date": "Coverage start date",
+    "maturity_date": "Maturity date if applicable",
+    "renewal_date": "Renewal date if stated"
   },
-  "warnings_and_gaps": ["Any important warnings, coverage gaps, unusual exclusions, or gotchas"],
-  "summary": "A 2-3 sentence plain-English summary of what this policy does, who it's for, and the total protection offered"
-}
-
-IMPORTANT EXTRACTION RULES:
-1. ALWAYS extract specific dollar amounts (S$ / $ / USD / €) for every coverage item found
-2. ALWAYS extract exclusions with specific conditions — not just generic categories
-3. ALWAYS extract waiting periods, renewal terms, and cancellation rights
-4. ALWAYS describe the claims process if mentioned in the document
-5. For travel insurance: extract medical, trip cancellation, baggage, delay, personal accident amounts
-6. For life/health: extract sum assured, critical illness payout, waiting periods, pre-existing exclusions
-7. For car insurance: extract third-party liability, own damage, excess, unnamed driver, NCD
-8. For home insurance: extract building contents, valuables sub-limits, liability coverage
-9. NEVER leave coverage amounts as generic text — always include the dollar figure if present
-10. If a field is genuinely not in the document, set it to null or an empty array
-11. Return ONLY valid JSON — no markdown code blocks, no explanations outside the JSON`;
-
-    // Timeout: 8 seconds to stay under Vercel free tier 10s limit
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+  "maturity": {
+    "type": "Maturity type if applicable (e.g., Whole Life, Term, Endowment)",
+    "term_years": "Term in years if applicable",
+    "surrender_value_notes": "Surrender value or cash value notes if found"
+  },
+  "investment_linked": {
+    "is_ilp": false,
+    "allocation": "Premium allocation to investment if applicable",
+    "projected_returns": "Projected return rates if stated",
+    "funds": ["List of funds if applicable"]
+  },
+  "warnings": ["Important warnings, disclaimers, or notes found in the document"],
+  "summary": "A concise one-paragraph summary of the entire policy in plain English (3-4 sentences)"
+}`;
 
     const response = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY}`
       },
-      signal: controller.signal,
       body: JSON.stringify({
-        model: 'agnes-1.5-flash',
+        model: 'agnes-1.5-pro',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyze this insurance document text and return JSON only:\n\n${text.substring(0, 12000)}` }
+          { role: 'user', content: `Analyze this insurance document:\n\n${text.substring(0, 8000)}` }
         ],
-        temperature: 0.1,
-        max_tokens: 2000
+        temperature: 0.2,
+        max_tokens: 4000
       })
     });
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      return res.status(502).json({ error: 'AI analysis failed. Please try again.' });
+      const errorText = await response.text();
+      console.error('Agnes API error:', errorText);
+      return res.status(502).json({ error: 'AI analysis service temporarily unavailable. Please try again.' });
     }
 
     const data = await response.json();
-    const aiContent = data.choices?.[0]?.message?.content || '';
-    
-    // Extract JSON from response (AI might wrap in markdown)
-    let jsonStr = aiContent;
-    const jsonMatch = aiContent.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch) jsonStr = jsonMatch[1];
-    
-    let analysis;
+    const content = data.choices?.[0]?.message?.content || '';
+
+    let parsed;
     try {
-      analysis = JSON.parse(jsonStr);
-    } catch {
-      return res.status(200).json({ 
-        raw_response: aiContent,
-        error: 'Could not parse structured data. Showing raw analysis instead.'
+      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      parsed = JSON.parse(cleaned);
+    } catch (e) {
+      console.error('JSON parse error:', e, 'Content:', content.substring(0, 200));
+      return res.status(500).json({ 
+        error: 'AI response format error. Please try again with a clearer document.',
+        raw: content.substring(0, 500)
       });
     }
 
-    return res.status(200).json({ analysis });
+    res.status(200).json({ analysis: parsed, mode });
 
   } catch (err) {
-    if (err.name === 'AbortError') {
-      return res.status(504).json({ 
-        error: 'AI analysis timed out. The document may be too large or the service is slow. Try pasting a smaller excerpt manually.' 
-      });
-    }
-    return res.status(500).json({ error: err.message || 'Server error' });
+    console.error('Analysis error:', err);
+    res.status(500).json({ error: 'Analysis failed. Please try again.' });
   }
 }

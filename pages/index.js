@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Head from 'next/head';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 let pdfjsLib = null;
 
@@ -24,6 +26,238 @@ const createEmptyDoc = (id) => ({
   stage: null,
   extractProgress: null,
 });
+
+const generatePdfReport = (doc, analysis) => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  
+  // Header
+  pdf.setFillColor(16, 185, 129);
+  pdf.rect(0, 0, pageWidth, 35, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(22);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Policy2Summary', margin, 20);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('AI-Powered Insurance Analysis Report', margin, 28);
+  
+  let y = 45;
+  
+  // Policy Info Box
+  pdf.setFillColor(240, 253, 244);
+  pdf.roundedRect(margin, y, contentWidth, 30, 3, 3, 'F');
+  pdf.setTextColor(31, 41, 55);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`Policy: ${doc.file?.name?.replace(/\.[^/.]+$/, '') || 'Insurance Document'}`, margin + 5, y + 10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(107, 114, 128);
+  pdf.text(`Insurer: ${analysis.policy_overview?.insurer || analysis.insurer || 'N/A'}`, margin + 5, y + 18);
+  pdf.text(`Type: ${analysis.policy_overview?.policy_type || analysis.policy_type || 'N/A'} | Date: ${new Date().toLocaleDateString()}`, margin + 5, y + 26);
+  y += 40;
+  
+  // Executive Summary
+  if (analysis.executive_summary) {
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Executive Summary', margin, y);
+    y += 8;
+    pdf.setTextColor(55, 65, 81);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    const summaryLines = pdf.splitTextToSize(analysis.executive_summary, contentWidth);
+    pdf.text(summaryLines, margin, y);
+    y += summaryLines.length * 4.5 + 10;
+  }
+  
+  // Key Highlights
+  if (analysis.key_highlights?.length) {
+    if (y > 250) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Key Highlights', margin, y);
+    y += 8;
+    
+    analysis.key_highlights.forEach((highlight, idx) => {
+      if (y > 270) { pdf.addPage(); y = 20; }
+      pdf.setTextColor(16, 185, 129);
+      pdf.setFontSize(10);
+      pdf.text('•', margin, y);
+      pdf.setTextColor(55, 65, 81);
+      const lines = pdf.splitTextToSize(highlight, contentWidth - 8);
+      pdf.text(lines, margin + 5, y);
+      y += lines.length * 4.5 + 3;
+    });
+    y += 8;
+  }
+  
+  // Coverage Analysis Table
+  if (analysis.coverage_analysis || analysis.coverage_details) {
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Coverage Analysis', margin, y);
+    y += 10;
+    
+    const coverage = analysis.coverage_analysis || analysis.coverage_details;
+    const tableData = [];
+    if (coverage?.description) {
+      tableData.push(['Description', coverage.description]);
+    }
+    if (coverage?.main_coverage?.length) {
+      coverage.main_coverage.forEach(item => tableData.push(['Coverage', item]));
+    }
+    if (coverage?.riders_and_additions?.length || coverage?.riders_add_ons?.length) {
+      (coverage.riders_and_additions || coverage.riders_add_ons).forEach(item => tableData.push(['Rider/Add-on', item]));
+    }
+    if (coverage?.total_coverage_value) {
+      tableData.push(['Total Coverage', coverage.total_coverage_value]);
+    }
+    
+    if (tableData.length) {
+      pdf.autoTable({
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [['Category', 'Details']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10, fontStyle: 'bold' },
+        bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+        columnStyles: { 0: { cellWidth: 45, fontStyle: 'bold' } },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+      });
+      y = pdf.lastAutoTable.finalY + 10;
+    }
+  }
+  
+  // Exclusions & Warnings
+  const exclusions = analysis.exclusions_and_warnings || analysis.exclusions_and_limitations;
+  if (exclusions) {
+    if (y > 200) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(239, 68, 68);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Exclusions & Warnings', margin, y);
+    y += 10;
+    
+    const warnData = [];
+    if (exclusions.critical_exclusions?.length) {
+      exclusions.critical_exclusions.forEach(e => warnData.push(['Exclusion', e]));
+    } else if (exclusions.exclusions?.length) {
+      exclusions.exclusions.forEach(e => warnData.push(['Exclusion', e]));
+    }
+    if (exclusions.limitations?.length) {
+      exclusions.limitations.forEach(l => warnData.push(['Limitation', l]));
+    }
+    if (exclusions.red_flags?.length) {
+      exclusions.red_flags.forEach(r => warnData.push(['Red Flag', r]));
+    }
+    if (exclusions.waiting_periods?.length) {
+      exclusions.waiting_periods.forEach(w => warnData.push(['Waiting Period', w]));
+    }
+    
+    if (warnData.length) {
+      pdf.autoTable({
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [['Type', 'Details']],
+        body: warnData,
+        theme: 'grid',
+        headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 10, fontStyle: 'bold' },
+        bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+        columnStyles: { 0: { cellWidth: 45, fontStyle: 'bold' } },
+        alternateRowStyles: { fillColor: [254, 242, 242] },
+      });
+      y = pdf.lastAutoTable.finalY + 10;
+    }
+  }
+  
+  // Financial Analysis
+  if (analysis.financial_analysis) {
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Financial Assessment', margin, y);
+    y += 10;
+    
+    const finData = [];
+    if (analysis.financial_analysis.premium_assessment) finData.push(['Premium Assessment', analysis.financial_analysis.premium_assessment]);
+    if (analysis.financial_analysis.value_score) finData.push(['Value Score', analysis.financial_analysis.value_score]);
+    if (analysis.financial_analysis.cost_efficiency_notes) finData.push(['Notes', analysis.financial_analysis.cost_efficiency_notes]);
+    if (analysis.premium?.amount) finData.push(['Premium', `${analysis.premium.amount} ${analysis.premium.frequency || ''}`]);
+    
+    if (finData.length) {
+      pdf.autoTable({
+        startY: y,
+        margin: { left: margin, right: margin },
+        head: [['Item', 'Details']],
+        body: finData,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
+        bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+        columnStyles: { 0: { cellWidth: 45, fontStyle: 'bold' } },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+      });
+      y = pdf.lastAutoTable.finalY + 10;
+    }
+  }
+  
+  // Recommendations
+  if (analysis.recommendations?.length) {
+    if (y > 230) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Recommendations', margin, y);
+    y += 10;
+    
+    pdf.setTextColor(55, 65, 81);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    analysis.recommendations.forEach((rec, idx) => {
+      if (y > 270) { pdf.addPage(); y = 20; }
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(`${idx + 1}.`, margin, y);
+      pdf.setTextColor(55, 65, 81);
+      const lines = pdf.splitTextToSize(rec, contentWidth - 12);
+      pdf.text(lines, margin + 8, y);
+      y += lines.length * 4.5 + 5;
+    });
+    y += 5;
+  }
+  
+  // Footer Disclaimer
+  if (y > 260) { pdf.addPage(); y = 20; }
+  pdf.setDrawColor(229, 231, 235);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 8;
+  pdf.setTextColor(156, 163, 175);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'italic');
+  const disclaimer = 'This report is generated by AI for reference only. Always verify details with your insurer or licensed agent. Not financial advice.';
+  const discLines = pdf.splitTextToSize(disclaimer, contentWidth);
+  pdf.text(discLines, margin, y);
+  
+  // Page numbers
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setTextColor(156, 163, 175);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pdf.internal.pageSize.getHeight() - 10);
+    pdf.text('Policy2Summary.com', margin, pdf.internal.pageSize.getHeight() - 10);
+  }
+  
+  pdf.save(`policy2summary-report-${doc.file?.name?.replace(/\.[^/.]+$/, '') || 'document'}.pdf`);
+};
 
 export default function Home() {
   const [documents, setDocuments] = useState([createEmptyDoc(0)]);
@@ -127,6 +361,40 @@ export default function Home() {
       } else {
         updateDoc(id, { error: err.message || 'Failed to analyze text', loading: false });
       }
+    }
+  };
+
+  const runExecutiveAnalysis = async (id) => {
+    const doc = documents.find(d => d.id === id);
+    if (!doc?.extractedText || doc.extractedText.length < 50) {
+      updateDoc(id, { error: 'No text available for executive analysis.' });
+      return;
+    }
+    updateDoc(id, { loading: true, error: '', stage: 'executive_analysis' });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({ text: doc.extractedText, mode: 'executive' })
+      });
+
+      clearTimeout(timeoutId);
+      const data = await res.json();
+
+      if (data.error) {
+        updateDoc(id, { error: data.error, loading: false, stage: null });
+      } else {
+        updateDoc(id, { analysis: data.analysis, loading: false, stage: null });
+        generatePdfReport(doc, data.analysis);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      updateDoc(id, { error: err.message || 'Executive analysis failed', loading: false, stage: null });
     }
   };
 
@@ -598,16 +866,16 @@ export default function Home() {
             <a href="#upload-section" className="hidden sm:inline-flex text-sm text-slate-500 hover:text-slate-800 transition-colors font-medium">Analyze</a>
             {analyzedCount > 0 && (
               <button
-                disabled
-                className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-medium cursor-not-allowed relative group"
+                onClick={() => {
+                  const analyzedDoc = documents.find(d => d.analysis && !d.analysis.raw);
+                  if (analyzedDoc) runExecutiveAnalysis(analyzedDoc.id);
+                }}
+                className="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Export PDF
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  Coming Soon
-                </span>
               </button>
             )}
           </div>
@@ -729,7 +997,7 @@ export default function Home() {
                 <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">3</div>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 mb-2">Get Your Summary</h3>
-              <p className="text-slate-600">Receive a clear, structured breakdown of each policy. Export analysis reports and make informed decisions.<span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">PDF Coming Soon</span></p>
+              <p className="text-slate-600">Receive a clear, structured breakdown of each policy. Generate professional PDF analysis reports and make informed decisions.</span></p>
             </div>
           </div>
         </div>
@@ -870,16 +1138,13 @@ export default function Home() {
                   <div className="flex items-center gap-2">
                     {doc.analysis && !doc.analysis.raw && (
                       <button
-                        disabled
-                        className="p-2 text-slate-300 cursor-not-allowed relative group"
-                        title="Export PDF - Coming Soon"
+                        onClick={() => runExecutiveAnalysis(doc.id)}
+                        className="p-2 text-emerald-500 hover:text-emerald-700 transition-colors"
+                        title="Export PDF Report"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                          Coming Soon
-                        </span>
                       </button>
                     )}
                     <button
@@ -984,6 +1249,8 @@ export default function Home() {
                         <span>Extracting text from PDF{doc.extractProgress ? ` (${doc.extractProgress})` : ''}...</span>
                       ) : doc.stage === 'analyzing' ? (
                         <span>Analyzing with AI...</span>
+                      ) : doc.stage === 'executive_analysis' ? (
+                        <span>Preparing executive PDF report...</span>
                       ) : (
                         <span>Processing...</span>
                       )}
