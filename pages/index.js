@@ -29,12 +29,12 @@ const createEmptyDoc = (id) => ({
 const generatePdfReport = async (doc, analysis) => {
   const { jsPDF } = await import('jspdf');
   const autoTable = (await import('jspdf-autotable')).default;
-  
+
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
-  
+
   // Header
   pdf.setFillColor(16, 185, 129);
   pdf.rect(0, 0, pageWidth, 35, 'F');
@@ -45,9 +45,9 @@ const generatePdfReport = async (doc, analysis) => {
   pdf.setFontSize(11);
   pdf.setFont('helvetica', 'normal');
   pdf.text('AI-Powered Insurance Analysis Report', margin, 28);
-  
+
   let y = 45;
-  
+
   // Policy Info Box
   pdf.setFillColor(240, 253, 244);
   pdf.roundedRect(margin, y, contentWidth, 30, 3, 3, 'F');
@@ -60,7 +60,7 @@ const generatePdfReport = async (doc, analysis) => {
   pdf.text(`Insurer: ${analysis.policy_overview?.insurer || analysis.insurer || 'N/A'}`, margin + 5, y + 18);
   pdf.text(`Type: ${analysis.policy_overview?.policy_type || analysis.policy_type || 'N/A'} | Date: ${new Date().toLocaleDateString()}`, margin + 5, y + 26);
   y += 40;
-  
+
   // Executive Summary
   if (analysis.executive_summary) {
     pdf.setTextColor(16, 185, 129);
@@ -75,7 +75,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.text(summaryLines, margin, y);
     y += summaryLines.length * 4.5 + 10;
   }
-  
+
   // Key Highlights
   if (analysis.key_highlights?.length) {
     if (y > 250) { pdf.addPage(); y = 20; }
@@ -84,7 +84,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Key Highlights', margin, y);
     y += 8;
-    
+
     analysis.key_highlights.forEach((highlight, idx) => {
       if (y > 270) { pdf.addPage(); y = 20; }
       pdf.setTextColor(16, 185, 129);
@@ -97,7 +97,7 @@ const generatePdfReport = async (doc, analysis) => {
     });
     y += 8;
   }
-  
+
   // Coverage Analysis Table
   if (analysis.coverage_analysis || analysis.coverage_details) {
     if (y > 220) { pdf.addPage(); y = 20; }
@@ -106,7 +106,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Coverage Analysis', margin, y);
     y += 10;
-    
+
     const coverage = analysis.coverage_analysis || analysis.coverage_details;
     const tableData = [];
     if (coverage?.description) {
@@ -121,7 +121,7 @@ const generatePdfReport = async (doc, analysis) => {
     if (coverage?.total_coverage_value) {
       tableData.push(['Total Coverage', coverage.total_coverage_value]);
     }
-    
+
     if (tableData.length) {
       autoTable(pdf, {
         startY: y,
@@ -137,7 +137,7 @@ const generatePdfReport = async (doc, analysis) => {
       y = pdf.lastAutoTable.finalY + 10;
     }
   }
-  
+
   // Exclusions & Warnings
   const exclusions = analysis.exclusions_and_warnings || analysis.exclusions_and_limitations;
   if (exclusions) {
@@ -147,7 +147,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Exclusions & Warnings', margin, y);
     y += 10;
-    
+
     const warnData = [];
     if (exclusions.critical_exclusions?.length) {
       exclusions.critical_exclusions.forEach(e => warnData.push(['Exclusion', e]));
@@ -163,7 +163,7 @@ const generatePdfReport = async (doc, analysis) => {
     if (exclusions.waiting_periods?.length) {
       exclusions.waiting_periods.forEach(w => warnData.push(['Waiting Period', w]));
     }
-    
+
     if (warnData.length) {
       autoTable(pdf, {
         startY: y,
@@ -179,7 +179,7 @@ const generatePdfReport = async (doc, analysis) => {
       y = pdf.lastAutoTable.finalY + 10;
     }
   }
-  
+
   // Financial Analysis
   if (analysis.financial_analysis) {
     if (y > 220) { pdf.addPage(); y = 20; }
@@ -188,13 +188,13 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Financial Assessment', margin, y);
     y += 10;
-    
+
     const finData = [];
     if (analysis.financial_analysis.premium_assessment) finData.push(['Premium Assessment', analysis.financial_analysis.premium_assessment]);
     if (analysis.financial_analysis.value_score) finData.push(['Value Score', analysis.financial_analysis.value_score]);
     if (analysis.financial_analysis.cost_efficiency_notes) finData.push(['Notes', analysis.financial_analysis.cost_efficiency_notes]);
     if (analysis.premium?.amount) finData.push(['Premium', `${analysis.premium.amount} ${analysis.premium.frequency || ''}`]);
-    
+
     if (finData.length) {
       autoTable(pdf, {
         startY: y,
@@ -210,7 +210,7 @@ const generatePdfReport = async (doc, analysis) => {
       y = pdf.lastAutoTable.finalY + 10;
     }
   }
-  
+
   // Recommendations
   if (analysis.recommendations?.length) {
     if (y > 230) { pdf.addPage(); y = 20; }
@@ -219,7 +219,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.setFont('helvetica', 'bold');
     pdf.text('Recommendations', margin, y);
     y += 10;
-    
+
     pdf.setTextColor(55, 65, 81);
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
@@ -234,7 +234,7 @@ const generatePdfReport = async (doc, analysis) => {
     });
     y += 5;
   }
-  
+
   // Footer Disclaimer
   if (y > 260) { pdf.addPage(); y = 20; }
   pdf.setDrawColor(229, 231, 235);
@@ -246,7 +246,7 @@ const generatePdfReport = async (doc, analysis) => {
   const disclaimer = 'This report is generated by AI for reference only. Always verify details with your insurer or licensed agent. Not financial advice.';
   const discLines = pdf.splitTextToSize(disclaimer, contentWidth);
   pdf.text(discLines, margin, y);
-  
+
   // Page numbers
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
@@ -257,7 +257,7 @@ const generatePdfReport = async (doc, analysis) => {
     pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pdf.internal.pageSize.getHeight() - 10);
     pdf.text('Policy2Summary.com', margin, pdf.internal.pageSize.getHeight() - 10);
   }
-  
+
   pdf.save(`policy2summary-report-${doc.file?.name?.replace(/\.[^/.]+$/, '') || 'document'}.pdf`);
 };
 
@@ -275,27 +275,27 @@ export default function Home() {
     const pdfjs = await loadPdfJs();
     const options = { data: arrayBuffer };
     if (password) options.password = password;
-    
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('TIMEOUT'));
       }, timeoutMs);
-      
+
       try {
         const loadingTask = pdfjs.getDocument(options);
-        
+
         if (loadingTask.onPassword !== undefined) {
           loadingTask.onPassword = (updatePassword, reason) => {
             clearTimeout(timeoutId);
             reject(new Error('PASSWORD_REQUIRED'));
           };
         }
-        
+
         loadingTask.promise.then(pdf => {
           clearTimeout(timeoutId);
           let fullText = '';
           const maxPages = Math.min(pdf.numPages, 20);
-          
+
           const extractPages = async () => {
             try {
               for (let i = 1; i <= maxPages; i++) {
@@ -309,7 +309,7 @@ export default function Home() {
               reject(err);
             }
           };
-          
+
           extractPages();
         }).catch(err => {
           clearTimeout(timeoutId);
@@ -335,7 +335,7 @@ export default function Home() {
     updateDoc(id, { loading: true, error: '', analysis: null });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
 
     try {
       const res = await fetch('/api/analyze', {
@@ -348,7 +348,7 @@ export default function Home() {
       clearTimeout(timeoutId);
 
       const data = await res.json();
-      
+
       if (data.error && !data.raw_response) {
         updateDoc(id, { error: data.error, loading: false });
       } else if (data.raw_response) {
@@ -359,7 +359,7 @@ export default function Home() {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        updateDoc(id, { error: 'Request timed out. The document may be too large or the AI service is slow. Try pasting a smaller excerpt manually.', loading: false });
+        updateDoc(id, { error: 'Request timed out. The AI service is taking longer than expected. Please try again.', loading: false });
       } else {
         updateDoc(id, { error: err.message || 'Failed to analyze text', loading: false });
       }
@@ -382,9 +382,9 @@ export default function Home() {
 
     for (let i = 0; i < providers.length; i++) {
       const provider = providers[i];
-      updateDoc(id, { 
-        loading: true, 
-        error: '', 
+      updateDoc(id, {
+        loading: true,
+        error: '',
         stage: 'executive_analysis',
         stageMessage: `Analyzing with ${provider.name}...`
       });
@@ -397,10 +397,10 @@ export default function Home() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
-          body: JSON.stringify({ 
-            text: doc.extractedText, 
+          body: JSON.stringify({
+            text: doc.extractedText,
             mode: 'executive',
-            provider: provider.key 
+            provider: provider.key
           })
         });
 
@@ -415,9 +415,9 @@ export default function Home() {
 
         // Error but retryable
         if (data.retry && i < providers.length - 1) {
-          updateDoc(id, { 
+          updateDoc(id, {
             stageMessage: `${provider.name} busy. Waiting 10s before retry...`,
-            loading: true 
+            loading: true
           });
           await new Promise(r => setTimeout(r, 10000));
           continue;
@@ -428,32 +428,32 @@ export default function Home() {
 
       } catch (err) {
         clearTimeout(timeoutId);
-        
+
         if (err.name === 'AbortError') {
           if (i < providers.length - 1) {
-            updateDoc(id, { 
+            updateDoc(id, {
               stageMessage: `${provider.name} timed out. Waiting 10s before retry...`,
-              loading: true 
+              loading: true
             });
             await new Promise(r => setTimeout(r, 10000));
             continue;
           }
         }
-        
+
         if (i < providers.length - 1) {
-          updateDoc(id, { 
+          updateDoc(id, {
             stageMessage: `${provider.name} error. Waiting 10s before retry...`,
-            loading: true 
+            loading: true
           });
           await new Promise(r => setTimeout(r, 10000));
           continue;
         }
-        
-        updateDoc(id, { 
-          error: 'All AI providers are currently busy. Please try again in a few minutes.', 
-          loading: false, 
+
+        updateDoc(id, {
+          error: 'All AI providers are currently busy. Please try again in a few minutes.',
+          loading: false,
           stage: null,
-          stageMessage: null 
+          stageMessage: null
         });
         return;
       }
@@ -462,35 +462,35 @@ export default function Home() {
 
   const processFileForDoc = async (selectedFile, id, providedPassword = null) => {
     if (!selectedFile) return;
-    
+
     if (selectedFile.size === 0) {
       updateDoc(id, { error: 'This file is empty (0 bytes). Please upload a real document.', loading: false, stage: null });
       return;
     }
-    
+
     const MAX_SIZE_MB = 50;
     if (selectedFile.size > MAX_SIZE_MB * 1024 * 1024) {
       updateDoc(id, { error: `File too large (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_SIZE_MB} MB.`, loading: false, stage: null });
       return;
     }
-    
+
     const ext = selectedFile.name.split('.').pop().toLowerCase();
     const isPdf = selectedFile.type === 'application/pdf' || ext === 'pdf';
     const isDocx = ext === 'docx';
     const isText = selectedFile.type.startsWith('text/') || ext === 'txt' || ext === 'text';
-    
+
     if (!isPdf && !isDocx && !isText) {
       updateDoc(id, { error: `Unsupported file type (.${ext}). We accept PDF, DOCX, and TXT files only.`, loading: false, stage: null });
       return;
     }
-    
-    updateDoc(id, { 
-      file: selectedFile, 
-      error: '', 
-      analysis: null, 
+
+    updateDoc(id, {
+      file: selectedFile,
+      error: '',
+      analysis: null,
       needsPassword: false,
       extractedText: '',
-      loading: true 
+      loading: true
     });
 
     try {
@@ -503,9 +503,9 @@ export default function Home() {
           text = await extractTextFromPdf(arrayBuffer, null, 3000);
         } catch (firstErr) {
           if (firstErr.message === 'TIMEOUT' || firstErr.message === 'PASSWORD_REQUIRED') {
-            updateDoc(id, { 
-              needsPassword: true, 
-              pendingBuffer: clonedBuffer, 
+            updateDoc(id, {
+              needsPassword: true,
+              pendingBuffer: clonedBuffer,
               loading: false,
               stage: null,
               extractProgress: null,
@@ -547,9 +547,9 @@ export default function Home() {
 
     } catch (err) {
       if (err.message === 'PASSWORD_REQUIRED' || err.message === 'TIMEOUT') {
-        updateDoc(id, { 
-          needsPassword: true, 
-          pendingBuffer: arrayBuffer, 
+        updateDoc(id, {
+          needsPassword: true,
+          pendingBuffer: arrayBuffer,
           loading: false,
           stage: null,
           extractProgress: null,
@@ -564,21 +564,21 @@ export default function Home() {
   const handlePasswordSubmit = async (id) => {
     const doc = documents.find(d => d.id === id);
     if (!doc || !doc.password || !doc.pendingBuffer) return;
-    
+
     updateDoc(id, { needsPassword: false, loading: true, error: '', stage: 'extracting' });
-    
+
     try {
-      const extractPromise = extractTextFromPdf(doc.pendingBuffer, doc.password, 15000);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('PDF extraction timed out. The password may be incorrect or the file is too large. Try pasting text manually.')), 15000)
+      const extractPromise = extractTextFromPdf(doc.pendingBuffer, doc.password, 55000);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('PDF extraction timed out. The password may be incorrect or the file is too large. Try pasting text manually.')), 55000)
       );
       const text = await Promise.race([extractPromise, timeoutPromise]);
-      
+
       if (text.length < 100) {
         updateDoc(id, { error: 'Could not extract enough text. Try pasting text manually.', loading: false, stage: null, extractProgress: null });
         return;
       }
-      
+
       updateDoc(id, { extractedText: text.substring(0, 5000), pendingBuffer: null, stage: 'analyzing', extractProgress: null });
       await analyzeDocText(text, id);
     } catch (err) {
@@ -626,7 +626,7 @@ export default function Home() {
     if (analyzedDocs.length === 0) return;
 
     let csv = '\uFEFF';
-    
+
     analyzedDocs.forEach((doc, idx) => {
       const a = doc.analysis;
       csv += `Document ${idx + 1}: ${doc.file?.name || 'Unknown'}\n`;
@@ -635,14 +635,14 @@ export default function Home() {
       csv += `Insurer,"${(a.insurer || '').replace(/"/g, '""')}"\n`;
       csv += `Policy Number,"${(a.policy_number || '').replace(/"/g, '""')}"\n`;
       csv += `Policyholder,"${(a.policyholder || '').replace(/"/g, '""')}"\n`;
-      
+
       // Premium Amounts
       if (a.premium) {
         csv += `Premium Amount,"${String(a.premium.amount || '').replace(/"/g, '""')}"\n`;
         csv += `Premium Frequency,"${String(a.premium.frequency || '').replace(/"/g, '""')}"\n`;
         csv += `Annual Total,"${String(a.premium.total_annual || '').replace(/"/g, '""')}"\n`;
       }
-      
+
       // Key Dates
       if (a.key_dates) {
         csv += `Issue Date,"${String(a.key_dates.issue_date || '').replace(/"/g, '""')}"\n`;
@@ -650,7 +650,7 @@ export default function Home() {
         csv += `Expiry Date,"${String(a.key_dates.expiry_date || '').replace(/"/g, '""')}"\n`;
         csv += `Renewal Date,"${String(a.key_dates.renewal_date || '').replace(/"/g, '""')}"\n`;
       }
-      
+
       // Coverage Details
       if (a.coverage_details?.description) {
         csv += `Coverage Description,"${a.coverage_details.description.replace(/"/g, '""')}"\n`;
@@ -667,7 +667,7 @@ export default function Home() {
       if (a.coverage_details?.riders_add_ons?.length) {
         csv += `Add-ons / Riders,"${a.coverage_details.riders_add_ons.join('; ').replace(/"/g, '""')}"\n`;
       }
-      
+
       // Exclusions & Limitations
       if (a.exclusions_and_limitations?.exclusions?.length) {
         csv += `Exclusions,"${a.exclusions_and_limitations.exclusions.join('; ').replace(/"/g, '""')}"\n`;
@@ -681,7 +681,7 @@ export default function Home() {
       if (a.exclusions_and_limitations?.special_conditions?.length) {
         csv += `Special Conditions,"${a.exclusions_and_limitations.special_conditions.join('; ').replace(/"/g, '""')}"\n`;
       }
-      
+
       // Terms & Conditions
       if (a.terms_and_conditions?.policy_term) {
         csv += `Policy Term,"${a.terms_and_conditions.policy_term.replace(/"/g, '""')}"\n`;
@@ -698,12 +698,12 @@ export default function Home() {
       if (a.terms_and_conditions?.grace_period) {
         csv += `Grace Period,"${a.terms_and_conditions.grace_period.replace(/"/g, '""')}"\n`;
       }
-      
+
       // Warnings & Gaps
       if (a.warnings_and_gaps?.length) {
         csv += `Warnings / Gaps,"${a.warnings_and_gaps.join('; ').replace(/"/g, '""')}"\n`;
       }
-      
+
       csv += `Summary,"${(a.summary || '').replace(/"/g, '""')}"\n`;
       csv += `\n`;
     });
@@ -813,27 +813,27 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white text-slate-800">
       <Head>
-        <title>Policy2Summary — Free AI Insurance Document Summarizer | Read Policy Fine Print Instantly</title>
+        <title>Policy2Summary - Free AI Insurance Document Summarizer | Read Policy Fine Print Instantly</title>
         <meta name="description" content="Upload any insurance policy PDF or DOCX and get an instant AI summary. Understand coverage, exclusions, premiums, and hidden clauses in plain English. Free, private, no signup." />
         <meta name="keywords" content="insurance policy summary, insurance document reader, AI insurance analyzer, policy summary generator, insurance certificate reader, free insurance tool, understand insurance coverage, insurance fine print" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.policy2summary.com/" />
-        
+
         {/* Open Graph */}
-        <meta property="og:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
-        <meta property="og:description" content="Upload any insurance policy and get an instant plain-English summary. Coverage, exclusions, premiums — all decoded by AI." />
+        <meta property="og:title" content="Policy2Summary - Free AI Insurance Document Summarizer" />
+        <meta property="og:description" content="Upload any insurance policy and get an instant plain-English summary. Coverage, exclusions, premiums - all decoded by AI." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.policy2summary.com/" />
         <meta property="og:image" content="https://www.policy2summary.com/images/og-image.png" />
         <meta property="og:site_name" content="Policy2Summary" />
         <meta property="og:locale" content="en_SG" />
-        
+
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Policy2Summary — Free AI Insurance Document Summarizer" />
+        <meta name="twitter:title" content="Policy2Summary - Free AI Insurance Document Summarizer" />
         <meta name="twitter:description" content="Upload any insurance policy and get an instant plain-English summary." />
         <meta name="twitter:image" content="https://www.policy2summary.com/images/og-image.png" />
-        
+
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify({
           "@context": "https://schema.org",
@@ -915,7 +915,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <img
               src="/images/logo.jpg"
-              alt="Policy2Summary logo — AI insurance document summarizer"
+              alt="Policy2Summary logo - AI insurance document summarizer"
               className="w-9 h-9 rounded-lg object-cover"
             />
             <div>
@@ -950,7 +950,7 @@ export default function Home() {
           <div className="mb-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Free Tool — No Signup Required
+              Free Tool - No Signup Required
             </div>
           </div>
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -960,7 +960,7 @@ export default function Home() {
                 <span className="text-emerald-600">Plain English</span>
               </h2>
               <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-lg">
-                Upload any insurance policy — PDF, Word, or text. Our AI reads the fine print and tells you exactly what you are covered for, what is excluded, and what it costs.
+                Upload any insurance policy - PDF, Word, or text. Our AI reads the fine print and tells you exactly what you are covered for, what is excluded, and what it costs.
               </p>
               <div className="flex flex-wrap gap-4">
                 <button
@@ -1026,7 +1026,7 @@ export default function Home() {
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">How It Works</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Three simple steps to understand any insurance document — no insurance background needed.
+              Three simple steps to understand any insurance document - no insurance background needed.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -1093,7 +1093,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-1">Key Dates Scattered Everywhere</h3>
-                    <p className="text-slate-600">Issue dates, commencement dates, maturity dates, renewal dates — each buried in different sections of a 30-page document.</p>
+                    <p className="text-slate-600">Issue dates, commencement dates, maturity dates, renewal dates - each buried in different sections of a 30-page document.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -1104,7 +1104,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-1">Coverage Amounts in Fine Print</h3>
-                    <p className="text-slate-600">What you are actually insured for — medical limits, trip cancellation caps, excess amounts — is rarely presented clearly.</p>
+                    <p className="text-slate-600">What you are actually insured for - medical limits, trip cancellation caps, excess amounts - is rarely presented clearly.</p>
                   </div>
                 </div>
               </div>
@@ -1125,7 +1125,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">All Insurance Types Supported</h2>
-            <p className="text-lg text-slate-600">From travel to life insurance — if it is a policy document, we can read it.</p>
+            <p className="text-lg text-slate-600">From travel to life insurance - if it is a policy document, we can read it.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {['Travel Insurance', 'Life Insurance', 'Health Insurance', 'Car Insurance', 'Home Insurance', 'Investment-Linked Policies', 'Personal Accident', 'Corporate Policies'].map((type) => (
@@ -1383,7 +1383,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Never Miss What Your Insurance Actually Covers</h2>
           <p className="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
-            Thousands of claims are denied every year because policyholders did not understand their coverage. Know exactly what you have — in plain English.
+            Thousands of claims are denied every year because policyholders did not understand their coverage. Know exactly what you have - in plain English.
           </p>
           <button
             onClick={() => { document.getElementById('upload-section')?.scrollIntoView({ behavior: 'smooth' }); }}
@@ -1432,7 +1432,7 @@ export default function Home() {
           </div>
           <div className="border-t border-slate-100 pt-6 text-center">
             <p className="text-sm text-slate-400 mb-3">
-              Policy2Summary — Free tool. No data stored. Documents processed in memory only.
+              Policy2Summary - Free tool. No data stored. Documents processed in memory only.
             </p>
             <div className="flex items-center justify-center gap-4 text-sm text-slate-400">
               <a href="/privacy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
