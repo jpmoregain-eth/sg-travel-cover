@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         model: isExecutive ? 'agnes-1.5-pro' : 'agnes-1.5-flash'
       },
       kimi: {
-        apiKey: process.env.KIMI_API_KEY || 'sk-t7Jg3P6rNNMo0ltQkpkdEpHzKxbvuVBWwpcLQhRwRuOe9gjV',
+        apiKey: process.env.KIMI_API_KEY || '',
         baseUrl: 'https://api.moonshot.ai/v1',
         model: 'kimi-k2.6'
       }
