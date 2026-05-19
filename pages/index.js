@@ -3,8 +3,6 @@ import Head from 'next/head';
 
 let pdfjsLib = null;
 
-let pdfjsLib = null;
-
 const loadPdfJs = async () => {
   if (pdfjsLib) return pdfjsLib;
   const pdfjs = await import('pdfjs-dist');
