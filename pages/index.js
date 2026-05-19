@@ -1000,7 +1000,7 @@ export default function Home() {
                 <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-bold">3</div>
               </div>
               <h3 className="text-xl font-semibold text-slate-900 mb-2">Get Your Summary</h3>
-              <p className="text-slate-600">Receive a clear, structured breakdown of each policy. Generate professional PDF analysis reports and make informed decisions.</span></p>
+              <p className="text-slate-600">Receive a clear, structured breakdown of each policy. Generate professional PDF analysis reports and make informed decisions.</p>
             </div>
           </div>
         </div>
