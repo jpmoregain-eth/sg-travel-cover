@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Head from 'next/head';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+
+let pdfjsLib = null;
 
 let pdfjsLib = null;
 
@@ -27,7 +27,10 @@ const createEmptyDoc = (id) => ({
   extractProgress: null,
 });
 
-const generatePdfReport = (doc, analysis) => {
+const generatePdfReport = async (doc, analysis) => {
+  const { jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
+  
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 20;
@@ -390,7 +393,7 @@ export default function Home() {
         updateDoc(id, { error: data.error, loading: false, stage: null });
       } else {
         updateDoc(id, { analysis: data.analysis, loading: false, stage: null });
-        generatePdfReport(doc, data.analysis);
+        await generatePdfReport(doc, data.analysis);
       }
     } catch (err) {
       clearTimeout(timeoutId);
