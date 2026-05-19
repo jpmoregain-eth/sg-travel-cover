@@ -27,7 +27,7 @@ const createEmptyDoc = (id) => ({
 
 const generatePdfReport = async (doc, analysis) => {
   const { jsPDF } = await import('jspdf');
-  await import('jspdf-autotable');
+  const autoTable = (await import('jspdf-autotable')).default;
   
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -122,7 +122,7 @@ const generatePdfReport = async (doc, analysis) => {
     }
     
     if (tableData.length) {
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: y,
         margin: { left: margin, right: margin },
         head: [['Category', 'Details']],
@@ -164,7 +164,7 @@ const generatePdfReport = async (doc, analysis) => {
     }
     
     if (warnData.length) {
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: y,
         margin: { left: margin, right: margin },
         head: [['Type', 'Details']],
@@ -195,7 +195,7 @@ const generatePdfReport = async (doc, analysis) => {
     if (analysis.premium?.amount) finData.push(['Premium', `${analysis.premium.amount} ${analysis.premium.frequency || ''}`]);
     
     if (finData.length) {
-      pdf.autoTable({
+      autoTable(pdf, {
         startY: y,
         margin: { left: margin, right: margin },
         head: [['Item', 'Details']],
