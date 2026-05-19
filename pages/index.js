@@ -26,7 +26,231 @@ const createEmptyDoc = (id) => ({
   extractProgress: null,
 });
 
-const generatePdfReport = async (doc, analysis) => {
+const generateComparisonPdf = async (docs, comparison) => {
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
+  
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  
+  // Header
+  pdf.setFillColor(16, 185, 129);
+  pdf.rect(0, 0, pageWidth, 35, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(22);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Policy2Summary', margin, 20);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Multi-Policy Comparison Report — ${docs.length} Policies`, margin, 28);
+  
+  let y = 45;
+  
+  // Executive Summary
+  pdf.setTextColor(16, 185, 129);
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Executive Summary', margin, y);
+  y += 8;
+  pdf.setTextColor(55, 65, 81);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  const summaryLines = pdf.splitTextToSize(comparison.comparison_summary || 'No summary available.', contentWidth);
+  pdf.text(summaryLines, margin, y);
+  y += summaryLines.length * 4.5 + 10;
+  
+  // Financial Overview
+  if (y > 220) { pdf.addPage(); y = 20; }
+  pdf.setTextColor(16, 185, 129);
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Financial Overview', margin, y);
+  y += 10;
+  
+  const finData = [];
+  if (comparison.total_annual_premium) finData.push(['Current Total Premium', comparison.total_annual_premium]);
+  if (comparison.financial_optimization?.optimal_premium_estimate) finData.push(['Optimal Premium', comparison.financial_optimization.optimal_premium_estimate]);
+  if (comparison.financial_optimization?.potential_savings) finData.push(['Potential Savings', comparison.financial_optimization.potential_savings]);
+  if (comparison.financial_optimization?.efficiency_score) finData.push(['Efficiency Score', comparison.financial_optimization.efficiency_score]);
+  
+  if (finData.length) {
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Metric', 'Value']],
+      body: finData,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
+      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+      columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' } },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+    });
+    y = pdf.lastAutoTable.finalY + 10;
+  }
+  
+  // Policy Comparison Table
+  if (y > 200) { pdf.addPage(); y = 20; }
+  pdf.setTextColor(16, 185, 129);
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Policy Breakdown', margin, y);
+  y += 10;
+  
+  if (comparison.policies?.length) {
+    const policyData = comparison.policies.map(p => [
+      p.name || 'Unknown',
+      p.insurer || 'N/A',
+      p.type || 'N/A',
+      p.annual_premium || 'N/A',
+      p.key_coverages?.join('; ') || 'N/A'
+    ]);
+    
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Policy', 'Insurer', 'Type', 'Annual Premium', 'Key Coverages']],
+      body: policyData,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+      styles: { overflow: 'linebreak', cellWidth: 'wrap' },
+    });
+    y = pdf.lastAutoTable.finalY + 10;
+  }
+  
+  // Overlap Analysis
+  if (comparison.overlap_analysis?.redundant_coverage?.length) {
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(239, 68, 68);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Coverage Overlap — Money Wasted', margin, y);
+    y += 10;
+    
+    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated', c]);
+    
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Type', 'Details']],
+      body: overlapData,
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 10 },
+      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } },
+      alternateRowStyles: { fillColor: [254, 242, 242] },
+    });
+    y = pdf.lastAutoTable.finalY + 10;
+  }
+  
+  // Gap Analysis
+  if (comparison.gap_analysis?.missing_coverage?.length) {
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(245, 158, 11);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Coverage Gaps — Risk Exposure', margin, y);
+    y += 10;
+    
+    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing', g]);
+    if (comparison.gap_analysis.recommended_additions?.length) {
+      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommend', r]));
+    }
+    
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Type', 'Details']],
+      body: gapData,
+      theme: 'grid',
+      headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 10 },
+      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } },
+      alternateRowStyles: { fillColor: [255, 251, 235] },
+    });
+    y = pdf.lastAutoTable.finalY + 10;
+  }
+  
+  // Keep / Cancel / Review
+  if (comparison.keep_cancel_ranking?.length) {
+    if (y > 220) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Recommendation: Keep, Review, or Cancel', margin, y);
+    y += 10;
+    
+    const verdictData = comparison.keep_cancel_ranking.map(r => {
+      const color = r.verdict === 'KEEP' ? [16, 185, 129] : r.verdict === 'CANCEL' ? [239, 68, 68] : [245, 158, 11];
+      return [r.policy_name, r.verdict, r.reason];
+    });
+    
+    autoTable(pdf, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Policy', 'Verdict', 'Reason']],
+      body: verdictData,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
+      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
+      columnStyles: { 1: { fontStyle: 'bold' } },
+      alternateRowStyles: { fillColor: [249, 250, 251] },
+    });
+    y = pdf.lastAutoTable.finalY + 10;
+  }
+  
+  // Recommendations
+  if (comparison.consolidation_recommendations?.length) {
+    if (y > 230) { pdf.addPage(); y = 20; }
+    pdf.setTextColor(16, 185, 129);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Action Plan', margin, y);
+    y += 10;
+    
+    pdf.setTextColor(55, 65, 81);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    comparison.consolidation_recommendations.forEach((rec, idx) => {
+      if (y > 270) { pdf.addPage(); y = 20; }
+      pdf.setTextColor(16, 185, 129);
+      pdf.text(`${idx + 1}.`, margin, y);
+      pdf.setTextColor(55, 65, 81);
+      const lines = pdf.splitTextToSize(rec, contentWidth - 12);
+      pdf.text(lines, margin + 8, y);
+      y += lines.length * 4.5 + 5;
+    });
+    y += 5;
+  }
+  
+  // Footer
+  if (y > 260) { pdf.addPage(); y = 20; }
+  pdf.setDrawColor(229, 231, 235);
+  pdf.line(margin, y, pageWidth - margin, y);
+  y += 8;
+  pdf.setTextColor(156, 163, 175);
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'italic');
+  const disclaimer = 'This comparison is generated by AI for reference only. Always verify with a licensed insurance advisor before making changes. Not financial advice.';
+  const discLines = pdf.splitTextToSize(disclaimer, contentWidth);
+  pdf.text(discLines, margin, y);
+  
+  // Page numbers
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setTextColor(156, 163, 175);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pdf.internal.pageSize.getHeight() - 10);
+    pdf.text('Policy2Summary.com', margin, pdf.internal.pageSize.getHeight() - 10);
+  }
+  
+  pdf.save(`policy2summary-comparison-${docs.length}-policies.pdf`);
+};
   const { jsPDF } = await import('jspdf');
   const autoTable = (await import('jspdf-autotable')).default;
 
@@ -367,6 +591,136 @@ export default function Home() {
   };
 
   const runExecutiveAnalysis = async (id) => {
+    const doc = documents.find(d => d.id === id);
+    if (!doc?.extractedText || doc.extractedText.length < 50) {
+      updateDoc(id, { error: 'No text available for analysis.' });
+      return;
+    }
+
+    const providers = [
+      { name: 'Agnes AI', key: 'agnes' },
+      { name: 'Agnes AI (retry)', key: 'agnes' },
+      { name: 'Kimi AI', key: 'kimi' },
+      { name: 'Kimi AI (retry)', key: 'kimi' }
+    ];
+
+    for (let i = 0; i < providers.length; i++) {
+      const provider = providers[i];
+      updateDoc(id, { 
+        loading: true, 
+        error: '', 
+        stage: 'executive_analysis',
+        stageMessage: `Analyzing with ${provider.name}...`
+      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+      try {
+        const res = await fetch('/api/analyze-fallback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({ 
+            text: doc.extractedText, 
+            mode: 'executive',
+            provider: provider.key 
+          })
+        });
+
+        clearTimeout(timeoutId);
+        const data = await res.json();
+
+        if (!data.error) {
+          updateDoc(id, { analysis: data.analysis, loading: false, stage: null, stageMessage: null });
+          await generatePdfReport(doc, data.analysis);
+          return;
+        }
+
+        if (data.retry && i < providers.length - 1) {
+          updateDoc(id, { 
+            stageMessage: `${provider.name} busy. Waiting 10s before retry...`,
+            loading: true 
+          });
+          await new Promise(r => setTimeout(r, 10000));
+          continue;
+        }
+
+        throw new Error(data.error || 'All providers failed');
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        
+        if (err.name === 'AbortError') {
+          if (i < providers.length - 1) {
+            updateDoc(id, { 
+              stageMessage: `${provider.name} timed out. Waiting 10s before retry...`,
+              loading: true 
+            });
+            await new Promise(r => setTimeout(r, 10000));
+            continue;
+          }
+        }
+        
+        if (i < providers.length - 1) {
+          updateDoc(id, { 
+            stageMessage: `${provider.name} error. Waiting 10s before retry...`,
+            loading: true 
+          });
+          await new Promise(r => setTimeout(r, 10000));
+          continue;
+        }
+        
+        updateDoc(id, { 
+          error: 'All AI providers are currently busy. Please try again in a few minutes.', 
+          loading: false, 
+          stage: null,
+          stageMessage: null 
+        });
+        return;
+      }
+    }
+  };
+
+  const runComparison = async () => {
+    const analyzedDocs = documents.filter(d => d.analysis && !d.analysis.raw && d.file);
+    if (analyzedDocs.length < 2) {
+      alert('Please analyze at least 2 policies to compare.');
+      return;
+    }
+    
+    updateDoc(analyzedDocs[0].id, { loading: true, error: '', stage: 'comparison' });
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55000);
+    
+    try {
+      const res = await fetch('/api/analyze-compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          documents: analyzedDocs.map(d => ({
+            name: d.file.name.replace(/\.[^/.]+$/, ''),
+            text: d.extractedText
+          }))
+        })
+      });
+      
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      
+      if (data.error) {
+        updateDoc(analyzedDocs[0].id, { error: data.error, loading: false, stage: null });
+      } else {
+        updateDoc(analyzedDocs[0].id, { loading: false, stage: null });
+        await generateComparisonPdf(analyzedDocs, data.comparison);
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      updateDoc(analyzedDocs[0].id, { error: err.message || 'Comparison failed', loading: false, stage: null });
+    }
+  };
     const doc = documents.find(d => d.id === id);
     if (!doc?.extractedText || doc.extractedText.length < 50) {
       updateDoc(id, { error: 'No text available for analysis.' });
@@ -940,6 +1294,17 @@ export default function Home() {
                 Export PDF
               </button>
             )}
+            {analyzedCount >= 2 && (
+              <button
+                onClick={runComparison}
+                className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m6 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Compare & Export
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -1313,6 +1678,8 @@ export default function Home() {
                         <span>Analyzing with AI...</span>
                       ) : doc.stage === 'executive_analysis' ? (
                         <span>{doc.stageMessage || 'Preparing executive PDF report...'}</span>
+                      ) : doc.stage === 'comparison' ? (
+                        <span>Comparing policies and generating report...</span>
                       ) : doc.stage === 'pdf_export' ? (
                         <span>Generating PDF report...</span>
                       ) : (
