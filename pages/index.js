@@ -31,9 +31,6 @@ const generateComparisonPdf = async (docs, comparison) => {
   const autoTable = (await import('jspdf-autotable')).default;
   
   const pdf = new jsPDF('p', 'mm', 'a4');
-  const autoTable = (await import('jspdf-autotable')).default;
-  
-  const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 20;
   const contentWidth = pageWidth - margin * 2;
