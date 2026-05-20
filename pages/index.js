@@ -39,6 +39,16 @@ class ErrorBoundary extends Component {
   }
 }
 
+const truncateText = (text, maxLength) => {
+  if (!text || text.length <= maxLength) return text;
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  if (lastSpace > maxLength * 0.7) {
+    return truncated.substring(0, lastSpace) + '...';
+  }
+  return truncated + '...';
+};
+
 let pdfjsLib = null;
 
 const loadPdfJs = async () => {
@@ -238,7 +248,7 @@ const generateComparisonPdf = async (docs, comparison) => {
     pdf.text('Coverage Overlap  –  Money Wasted', margin, y);
     y += 10;
 
-    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated Coverage', c.substring(0, 120)]);
+    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated Coverage', truncateText(c, 140)]);
 
     autoTable(pdf, {
       startY: y,
@@ -264,9 +274,9 @@ const generateComparisonPdf = async (docs, comparison) => {
     pdf.text('Coverage Gaps  –  Risk Exposure', margin, y);
     y += 10;
 
-    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing Coverage', g.substring(0, 120)]);
+    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing Coverage', truncateText(g, 140)]);
     if (comparison.gap_analysis.recommended_additions?.length) {
-      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommendation', r.substring(0, 120)]));
+      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommendation', truncateText(r, 140)]));
     }
 
     autoTable(pdf, {
@@ -294,7 +304,7 @@ const generateComparisonPdf = async (docs, comparison) => {
     y += 10;
 
     const verdictData = comparison.keep_cancel_ranking.map(r => {
-      return [r.policy_name?.substring(0, 28) || 'Unknown', r.verdict, r.reason?.substring(0, 140) || ''];
+      return [truncateText(r.policy_name, 32) || 'Unknown', r.verdict, truncateText(r.reason, 160) || ''];
     });
 
     autoTable(pdf, {
