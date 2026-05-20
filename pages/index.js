@@ -63,37 +63,76 @@ const createEmptyDoc = (id) => ({
   stageMessage: null,
   extractProgress: null,
 });
+const loadImageAsDataUrl = async (url) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return null;
+  }
+};
+
 
 const generateComparisonPdf = async (docs, comparison) => {
   const { jsPDF } = await import('jspdf');
   const autoTable = (await import('jspdf-autotable')).default;
 
+  // Load images
+  const [logoDataUrl, watermarkDataUrl] = await Promise.all([
+    loadImageAsDataUrl('/images/logo.jpg'),
+    loadImageAsDataUrl('/images/watermark.jpg')
+  ]);
+
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 18;
   const contentWidth = pageWidth - margin * 2;
-  const primaryColor = [6, 95, 70];      // Deep emerald
-  const secondaryColor = [245, 158, 11]; // Amber
-  const dangerColor = [220, 38, 38];     // Red
+  const primaryColor = [6, 95, 70];
+  const secondaryColor = [245, 158, 11];
+  const dangerColor = [220, 38, 38];
   const textDark = [31, 41, 55];
   const textMuted = [107, 114, 128];
   const bgLight = [248, 250, 252];
 
-  // Professional Header with subtle border
-  pdf.setFillColor(...primaryColor);
-  pdf.rect(0, 0, pageWidth, 28, 'F');
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Policy2Summary', margin, 18);
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Multi-Policy Comparison Report  |  ${docs.length} Policies Analyzed`, margin, 25);
+  // Helper to add watermark to a page
+  const addWatermark = () => {
+    if (watermarkDataUrl) {
+      pdf.addImage(watermarkDataUrl, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+    }
+  };
 
-  // Subtle header underline
-  pdf.setDrawColor(6, 95, 70);
-  pdf.setLineWidth(0.8);
-  pdf.line(margin, 32, pageWidth - margin, 32);
+  // Helper to add header to a page
+  const addHeader = () => {
+    pdf.setFillColor(...primaryColor);
+    pdf.rect(0, 0, pageWidth, 28, 'F');
+    if (logoDataUrl) {
+      pdf.addImage(logoDataUrl, 'JPEG', margin, 6, 16, 16, undefined, 'FAST');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Policy2Summary', margin + 20, 18);
+    } else {
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Policy2Summary', margin, 18);
+    }
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Multi-Policy Comparison Report  |  ${docs.length} Policies Analyzed`, margin + (logoDataUrl ? 20 : 0), 25);
+    pdf.setDrawColor(6, 95, 70);
+    pdf.setLineWidth(0.8);
+    pdf.line(margin, 32, pageWidth - margin, 32);
+  };
+
+  addWatermark();
+  addHeader();
 
   let y = 40;
 
@@ -123,7 +162,7 @@ const generateComparisonPdf = async (docs, comparison) => {
   y += summaryLines.length * 4.5 + 12;
 
   // Financial Overview
-  if (y > 230) { pdf.addPage(); y = 25; }
+  if (y > 230) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
   pdf.setTextColor(...primaryColor);
   pdf.setFontSize(13);
   pdf.setFont('helvetica', 'bold');
@@ -153,7 +192,7 @@ const generateComparisonPdf = async (docs, comparison) => {
   }
 
   // Policy Comparison Table
-  if (y > 220) { pdf.addPage(); y = 25; }
+  if (y > 220) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
   pdf.setTextColor(...primaryColor);
   pdf.setFontSize(13);
   pdf.setFont('helvetica', 'bold');
@@ -192,7 +231,7 @@ const generateComparisonPdf = async (docs, comparison) => {
 
   // Overlap Analysis
   if (comparison.overlap_analysis?.redundant_coverage?.length) {
-    if (y > 230) { pdf.addPage(); y = 25; }
+    if (y > 230) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
     pdf.setTextColor(...dangerColor);
     pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
@@ -218,7 +257,7 @@ const generateComparisonPdf = async (docs, comparison) => {
 
   // Gap Analysis
   if (comparison.gap_analysis?.missing_coverage?.length) {
-    if (y > 230) { pdf.addPage(); y = 25; }
+    if (y > 230) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
     pdf.setTextColor(...secondaryColor);
     pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
@@ -247,7 +286,7 @@ const generateComparisonPdf = async (docs, comparison) => {
 
   // Keep / Cancel / Review
   if (comparison.keep_cancel_ranking?.length) {
-    if (y > 230) { pdf.addPage(); y = 25; }
+    if (y > 230) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
     pdf.setTextColor(...primaryColor);
     pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
@@ -279,7 +318,7 @@ const generateComparisonPdf = async (docs, comparison) => {
 
   // Action Plan
   if (comparison.consolidation_recommendations?.length) {
-    if (y > 230) { pdf.addPage(); y = 25; }
+    if (y > 230) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
     pdf.setTextColor(...primaryColor);
     pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
@@ -290,7 +329,7 @@ const generateComparisonPdf = async (docs, comparison) => {
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     comparison.consolidation_recommendations.forEach((rec, idx) => {
-      if (y > 270) { pdf.addPage(); y = 25; }
+      if (y > 270) { pdf.addPage(); addWatermark(); addHeader(); y = 40; }
       pdf.setTextColor(...primaryColor);
       pdf.setFont('helvetica', 'bold');
       pdf.text(`${idx + 1}.`, margin, y);
@@ -303,15 +342,13 @@ const generateComparisonPdf = async (docs, comparison) => {
     y += 5;
   }
 
-  // Professional Footer
+  // Professional Footer on all pages
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
-    // Footer line
     pdf.setDrawColor(203, 213, 225);
     pdf.setLineWidth(0.3);
     pdf.line(margin, pdf.internal.pageSize.getHeight() - 18, pageWidth - margin, pdf.internal.pageSize.getHeight() - 18);
-    // Footer text
     pdf.setTextColor(156, 163, 175);
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'normal');
