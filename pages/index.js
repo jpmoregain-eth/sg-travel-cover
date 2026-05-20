@@ -611,6 +611,8 @@ function Home() {
   const [documents, setDocuments] = useState([createEmptyDoc(0)]);
   const [dragOverId, setDragOverId] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [comparisonResult, setComparisonResult] = useState(null);
+  const [pdfGenerating, setPdfGenerating] = useState(false);
   const fileInputRefs = useRef({});
 
   const updateDoc = (id, updates) => {
@@ -754,8 +756,13 @@ function Home() {
         const data = await res.json();
 
         if (!data.error) {
-          updateDoc(id, { analysis: data.analysis, loading: false, stage: null, stageMessage: null });
-          await generatePdfReport(doc, data.analysis);
+          updateDoc(id, { loading: false, stage: null, stageMessage: null });
+          setPdfGenerating(true);
+          try {
+            await generatePdfReport(doc, data.analysis);
+          } finally {
+            setPdfGenerating(false);
+          }
           return;
         }
 
@@ -836,7 +843,8 @@ function Home() {
         updateDoc(analyzedDocs[0].id, { error: data.error, loading: false, stage: null });
       } else {
         updateDoc(analyzedDocs[0].id, { loading: false, stage: null });
-        await generateComparisonPdf(analyzedDocs, data.comparison);
+        setComparisonResult(data.comparison);
+        setTimeout(() => document.getElementById('comparison-results')?.scrollIntoView({ behavior: 'smooth' }), 300);
       }
     } catch (err) {
       clearTimeout(timeoutId);
@@ -1319,11 +1327,16 @@ function Home() {
                   const analyzedDoc = documents.find(d => d.analysis && !d.analysis.raw);
                   if (analyzedDoc) runExecutiveAnalysis(analyzedDoc.id);
                 }}
-                className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm"
+                disabled={pdfGenerating}
+                className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm"
               >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                {pdfGenerating ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
                 <span className="hidden sm:inline">Export PDF</span>
                 <span className="sm:hidden">PDF</span>
               </button>
@@ -1331,11 +1344,16 @@ function Home() {
             {analyzedCount >= 2 && (
               <button
                 onClick={runComparison}
-                className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm"
+                disabled={pdfGenerating}
+                className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm"
               >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m6 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+                {pdfGenerating ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m6 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                )}
                 <span className="hidden sm:inline">Compare & Export</span>
                 <span className="sm:hidden">Compare</span>
               </button>
@@ -1778,6 +1796,32 @@ function Home() {
             </button>
           )}
         </div>
+
+        {/* Comparison Results */}
+        {comparisonResult && (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-slate-900">Multi-Policy Comparison</h2>
+              <button
+                onClick={() => setComparisonResult(null)}
+                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+            <ComparisonResults
+              comparison={comparisonResult}
+              docs={documents.filter(d => d.analysis && !d.analysis.raw)}
+              pdfGenerating={pdfGenerating}
+              onExportPdf={() => {
+                const analyzedDocs = documents.filter(d => d.analysis && !d.analysis.raw && d.file);
+                if (analyzedDocs.length < 2) return;
+                setPdfGenerating(true);
+                generateComparisonPdf(analyzedDocs, comparisonResult).finally(() => setPdfGenerating(false));
+              }}
+            />
+          </div>
+        )}
       </section>
 
       {/* CTA Section */}
@@ -2134,6 +2178,227 @@ function AnalysisResults({ analysis }) {
               <li key={i}>{item}</li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ComparisonResults({ comparison, docs, onExportPdf, pdfGenerating }) {
+  if (!comparison) return null;
+  const summary = comparison.comparison_summary || comparison.executive_summary || '';
+
+  return (
+    <div id="comparison-results" className="mt-8 space-y-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-slate-900">Multi-Policy Comparison</h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onExportPdf}
+            disabled={pdfGenerating}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+          >
+            {pdfGenerating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export PDF
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Executive Summary */}
+      {summary && (
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="font-semibold text-emerald-800 text-sm">Executive Summary</h3>
+          </div>
+          <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">{summary}</p>
+        </div>
+      )}
+
+      {/* Financial Overview */}
+      {comparison.financial_optimization && (
+        <div className="grid md:grid-cols-4 gap-4">
+          {comparison.total_annual_premium && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-xs text-slate-500 mb-1">Current Total Premium</p>
+              <p className="text-lg font-bold text-slate-900">{comparison.total_annual_premium}</p>
+            </div>
+          )}
+          {comparison.financial_optimization?.optimal_premium_estimate && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-xs text-slate-500 mb-1">Optimal Premium</p>
+              <p className="text-lg font-bold text-emerald-600">{comparison.financial_optimization.optimal_premium_estimate}</p>
+            </div>
+          )}
+          {comparison.financial_optimization?.potential_savings && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-xs text-slate-500 mb-1">Potential Savings</p>
+              <p className="text-lg font-bold text-amber-600">{comparison.financial_optimization.potential_savings}</p>
+            </div>
+          )}
+          {comparison.financial_optimization?.efficiency_score && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 text-center">
+              <p className="text-xs text-slate-500 mb-1">Efficiency Score</p>
+              <p className={`text-lg font-bold ${comparison.financial_optimization.efficiency_score === 'Excellent' || comparison.financial_optimization.efficiency_score === 'Good' ? 'text-emerald-600' : 'text-red-600'}`}>
+                {comparison.financial_optimization.efficiency_score}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Policy Breakdown */}
+      {comparison.policies?.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <h3 className="text-sm font-semibold text-slate-800 p-4 border-b border-slate-100 flex items-center gap-2">
+            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Policy Breakdown
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50">
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Policy</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Insurer</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Type</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Premium</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Key Coverages</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {comparison.policies.map((p, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-900 font-medium">{p.name || 'Unknown'}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.insurer || 'N/A'}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.type || 'N/A'}</td>
+                    <td className="px-4 py-3 text-slate-900 font-semibold">{p.annual_premium || 'N/A'}</td>
+                    <td className="px-4 py-3 text-slate-600">{p.key_coverages?.slice(0, 2).join('; ') || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Overlap Analysis */}
+      {comparison.overlap_analysis?.redundant_coverage?.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-red-800 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Coverage Overlap — Money Wasted
+          </h3>
+          <ul className="space-y-2 text-sm text-red-700 list-disc list-inside">
+            {comparison.overlap_analysis.redundant_coverage.map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ul>
+          {comparison.overlap_analysis?.wasted_premium_estimate && (
+            <p className="mt-3 text-sm font-semibold text-red-800">
+              Wasted Premium Estimate: {comparison.overlap_analysis.wasted_premium_estimate}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Gap Analysis */}
+      {comparison.gap_analysis?.missing_coverage?.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Coverage Gaps — Risk Exposure
+          </h3>
+          <ul className="space-y-2 text-sm text-amber-800 list-disc list-inside">
+            {comparison.gap_analysis.missing_coverage.map((g, i) => (
+              <li key={i}>{g}</li>
+            ))}
+          </ul>
+          {comparison.gap_analysis?.recommended_additions?.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-amber-200">
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">Recommended Additions</p>
+              <ul className="space-y-1 text-sm text-amber-700 list-disc list-inside">
+                {comparison.gap_analysis.recommended_additions.map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Keep / Cancel / Review */}
+      {comparison.keep_cancel_ranking?.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <h3 className="text-sm font-semibold text-slate-800 p-4 border-b border-slate-100 flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Recommendation: Keep, Review, or Cancel
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50">
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Policy</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Verdict</th>
+                  <th className="text-left px-4 py-3 font-semibold text-slate-700">Reason</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {comparison.keep_cancel_ranking.map((r, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-900 font-medium">{r.policy_name || 'Unknown'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${
+                        r.verdict === 'KEEP' ? 'bg-emerald-100 text-emerald-700' :
+                        r.verdict === 'CANCEL' ? 'bg-red-100 text-red-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {r.verdict}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">{r.reason || ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Action Plan */}
+      {comparison.consolidation_recommendations?.length > 0 && (
+        <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-200 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-emerald-800 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Action Plan
+          </h3>
+          <ol className="space-y-2 text-sm text-slate-700 list-decimal list-inside">
+            {comparison.consolidation_recommendations.map((rec, i) => (
+              <li key={i}>{rec}</li>
+            ))}
+          </ol>
         </div>
       )}
     </div>
