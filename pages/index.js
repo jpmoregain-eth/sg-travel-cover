@@ -70,39 +70,62 @@ const generateComparisonPdf = async (docs, comparison) => {
 
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
-  const margin = 20;
+  const margin = 18;
   const contentWidth = pageWidth - margin * 2;
+  const primaryColor = [6, 95, 70];      // Deep emerald
+  const secondaryColor = [245, 158, 11]; // Amber
+  const dangerColor = [220, 38, 38];     // Red
+  const textDark = [31, 41, 55];
+  const textMuted = [107, 114, 128];
+  const bgLight = [248, 250, 252];
 
-  // Header
-  pdf.setFillColor(16, 185, 129);
-  pdf.rect(0, 0, pageWidth, 35, 'F');
+  // Professional Header with subtle border
+  pdf.setFillColor(...primaryColor);
+  pdf.rect(0, 0, pageWidth, 28, 'F');
   pdf.setTextColor(255, 255, 255);
-  pdf.setFontSize(22);
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Policy2Summary', margin, 20);
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Multi-Policy Comparison Report - ${docs.length} Policies`, margin, 28);
-
-  let y = 45;
-
-  // Executive Summary
-  pdf.setTextColor(16, 185, 129);
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Executive Summary', margin, y);
-  y += 8;
-  pdf.setTextColor(55, 65, 81);
+  pdf.text('Policy2Summary', margin, 18);
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
-  const summaryLines = pdf.splitTextToSize(comparison.comparison_summary || 'No summary available.', contentWidth);
+  pdf.text(`Multi-Policy Comparison Report  |  ${docs.length} Policies Analyzed`, margin, 25);
+
+  // Subtle header underline
+  pdf.setDrawColor(6, 95, 70);
+  pdf.setLineWidth(0.8);
+  pdf.line(margin, 32, pageWidth - margin, 32);
+
+  let y = 40;
+
+  // Report metadata box
+  pdf.setFillColor(...bgLight);
+  pdf.roundedRect(margin, y, contentWidth, 22, 2, 2, 'F');
+  pdf.setTextColor(...textDark);
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`Report Date: ${new Date().toLocaleDateString()}`, margin + 5, y + 8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(...textMuted);
+  pdf.text(`Documents analyzed: ${docs.map(d => d.file?.name?.replace(/\.[^/.]+$/, '')).join(', ')}`, margin + 5, y + 17);
+  y += 30;
+
+  // Executive Summary
+  pdf.setTextColor(...primaryColor);
+  pdf.setFontSize(13);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Executive Summary', margin, y);
+  y += 7;
+  pdf.setTextColor(...textDark);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  const summaryLines = pdf.splitTextToSize(comparison.executive_summary || comparison.comparison_summary || 'No summary available.', contentWidth);
   pdf.text(summaryLines, margin, y);
-  y += summaryLines.length * 4.5 + 10;
+  y += summaryLines.length * 4.5 + 12;
 
   // Financial Overview
-  if (y > 220) { pdf.addPage(); y = 20; }
-  pdf.setTextColor(16, 185, 129);
-  pdf.setFontSize(14);
+  if (y > 230) { pdf.addPage(); y = 25; }
+  pdf.setTextColor(...primaryColor);
+  pdf.setFontSize(13);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Financial Overview', margin, y);
   y += 10;
@@ -119,19 +142,20 @@ const generateComparisonPdf = async (docs, comparison) => {
       margin: { left: margin, right: margin },
       head: [['Metric', 'Value']],
       body: finData,
-      theme: 'grid',
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
-      columnStyles: { 0: { cellWidth: 60, fontStyle: 'bold' } },
-      alternateRowStyles: { fillColor: [249, 250, 251] },
+      theme: 'striped',
+      headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10, fontStyle: 'bold', halign: 'left' },
+      bodyStyles: { fontSize: 9.5, textColor: textDark, cellPadding: 4 },
+      columnStyles: { 0: { cellWidth: 70, fontStyle: 'bold' }, 1: { fontStyle: 'bold', textColor: primaryColor } },
+      styles: { lineColor: [226, 232, 240], lineWidth: 0.3, overflow: 'linebreak' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
     });
-    y = pdf.lastAutoTable.finalY + 10;
+    y = pdf.lastAutoTable.finalY + 12;
   }
 
   // Policy Comparison Table
-  if (y > 200) { pdf.addPage(); y = 20; }
-  pdf.setTextColor(16, 185, 129);
-  pdf.setFontSize(14);
+  if (y > 220) { pdf.addPage(); y = 25; }
+  pdf.setTextColor(...primaryColor);
+  pdf.setFontSize(13);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Policy Breakdown', margin, y);
   y += 10;
@@ -150,60 +174,60 @@ const generateComparisonPdf = async (docs, comparison) => {
       margin: { left: margin, right: margin },
       head: [['Policy', 'Insurer', 'Type', 'Premium', 'Key Coverages']],
       body: policyData,
-      theme: 'grid',
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 9 },
-      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
-      alternateRowStyles: { fillColor: [249, 250, 251] },
-      styles: { overflow: 'linebreak', cellPadding: 2 },
+      theme: 'striped',
+      headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 9, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 8.5, textColor: textDark, cellPadding: 3 },
+      styles: { overflow: 'linebreak', lineColor: [226, 232, 240], lineWidth: 0.3 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 45 }
+        0: { cellWidth: 28 },
+        1: { cellWidth: 38 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 24 },
+        4: { cellWidth: 42 }
       }
     });
-    y = pdf.lastAutoTable.finalY + 10;
+    y = pdf.lastAutoTable.finalY + 12;
   }
 
   // Overlap Analysis
   if (comparison.overlap_analysis?.redundant_coverage?.length) {
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setTextColor(239, 68, 68);
-    pdf.setFontSize(14);
+    if (y > 230) { pdf.addPage(); y = 25; }
+    pdf.setTextColor(...dangerColor);
+    pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Coverage Overlap - Money Wasted', margin, y);
+    pdf.text('Coverage Overlap  –  Money Wasted', margin, y);
     y += 10;
 
-    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated', c.substring(0, 120)]);
+    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated Coverage', c.substring(0, 120)]);
 
     autoTable(pdf, {
       startY: y,
       margin: { left: margin, right: margin },
       head: [['Type', 'Details']],
       body: overlapData,
-      theme: 'grid',
-      headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
-      columnStyles: { 0: { cellWidth: 30, fontStyle: 'bold' }, 1: { cellWidth: 140 } },
+      theme: 'striped',
+      headStyles: { fillColor: dangerColor, textColor: 255, fontSize: 10, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9, textColor: textDark, cellPadding: 4 },
+      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' }, 1: { cellWidth: 135 } },
       alternateRowStyles: { fillColor: [254, 242, 242] },
-      styles: { overflow: 'linebreak', cellPadding: 2 }
+      styles: { overflow: 'linebreak', lineColor: [254, 202, 202], lineWidth: 0.3 },
     });
-    y = pdf.lastAutoTable.finalY + 10;
+    y = pdf.lastAutoTable.finalY + 12;
   }
 
   // Gap Analysis
   if (comparison.gap_analysis?.missing_coverage?.length) {
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setTextColor(245, 158, 11);
-    pdf.setFontSize(14);
+    if (y > 230) { pdf.addPage(); y = 25; }
+    pdf.setTextColor(...secondaryColor);
+    pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Coverage Gaps - Risk Exposure', margin, y);
+    pdf.text('Coverage Gaps  –  Risk Exposure', margin, y);
     y += 10;
 
-    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing', g.substring(0, 120)]);
+    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing Coverage', g.substring(0, 120)]);
     if (comparison.gap_analysis.recommended_additions?.length) {
-      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommend', r.substring(0, 120)]));
+      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommendation', r.substring(0, 120)]));
     }
 
     autoTable(pdf, {
@@ -211,27 +235,27 @@ const generateComparisonPdf = async (docs, comparison) => {
       margin: { left: margin, right: margin },
       head: [['Type', 'Details']],
       body: gapData,
-      theme: 'grid',
-      headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
-      columnStyles: { 0: { cellWidth: 30, fontStyle: 'bold' }, 1: { cellWidth: 140 } },
+      theme: 'striped',
+      headStyles: { fillColor: secondaryColor, textColor: 255, fontSize: 10, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9, textColor: textDark, cellPadding: 4 },
+      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' }, 1: { cellWidth: 135 } },
       alternateRowStyles: { fillColor: [255, 251, 235] },
-      styles: { overflow: 'linebreak', cellPadding: 2 }
+      styles: { overflow: 'linebreak', lineColor: [253, 230, 138], lineWidth: 0.3 },
     });
-    y = pdf.lastAutoTable.finalY + 10;
+    y = pdf.lastAutoTable.finalY + 12;
   }
 
   // Keep / Cancel / Review
   if (comparison.keep_cancel_ranking?.length) {
-    if (y > 220) { pdf.addPage(); y = 20; }
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(14);
+    if (y > 230) { pdf.addPage(); y = 25; }
+    pdf.setTextColor(...primaryColor);
+    pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Recommendation: Keep, Review, or Cancel', margin, y);
     y += 10;
 
     const verdictData = comparison.keep_cancel_ranking.map(r => {
-      return [r.policy_name?.substring(0, 30) || 'Unknown', r.verdict, r.reason?.substring(0, 140) || ''];
+      return [r.policy_name?.substring(0, 28) || 'Unknown', r.verdict, r.reason?.substring(0, 140) || ''];
     });
 
     autoTable(pdf, {
@@ -239,65 +263,63 @@ const generateComparisonPdf = async (docs, comparison) => {
       margin: { left: margin, right: margin },
       head: [['Policy', 'Verdict', 'Reason']],
       body: verdictData,
-      theme: 'grid',
-      headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
+      theme: 'striped',
+      headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9, textColor: textDark, cellPadding: 4 },
       columnStyles: {
         0: { cellWidth: 45 },
-        1: { cellWidth: 25, fontStyle: 'bold' },
+        1: { cellWidth: 25, fontStyle: 'bold', halign: 'center' },
         2: { cellWidth: 100 }
       },
-      alternateRowStyles: { fillColor: [249, 250, 251] },
-      styles: { overflow: 'linebreak', cellPadding: 2 }
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { overflow: 'linebreak', lineColor: [226, 232, 240], lineWidth: 0.3 },
     });
-    y = pdf.lastAutoTable.finalY + 10;
+    y = pdf.lastAutoTable.finalY + 12;
   }
 
-  // Recommendations
+  // Action Plan
   if (comparison.consolidation_recommendations?.length) {
-    if (y > 230) { pdf.addPage(); y = 20; }
-    pdf.setTextColor(16, 185, 129);
-    pdf.setFontSize(14);
+    if (y > 230) { pdf.addPage(); y = 25; }
+    pdf.setTextColor(...primaryColor);
+    pdf.setFontSize(13);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Action Plan', margin, y);
     y += 10;
 
-    pdf.setTextColor(55, 65, 81);
+    pdf.setTextColor(...textDark);
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     comparison.consolidation_recommendations.forEach((rec, idx) => {
-      if (y > 270) { pdf.addPage(); y = 20; }
-      pdf.setTextColor(16, 185, 129);
+      if (y > 270) { pdf.addPage(); y = 25; }
+      pdf.setTextColor(...primaryColor);
+      pdf.setFont('helvetica', 'bold');
       pdf.text(`${idx + 1}.`, margin, y);
-      pdf.setTextColor(55, 65, 81);
+      pdf.setTextColor(...textDark);
+      pdf.setFont('helvetica', 'normal');
       const lines = pdf.splitTextToSize(rec, contentWidth - 12);
       pdf.text(lines, margin + 8, y);
-      y += lines.length * 4.5 + 5;
+      y += lines.length * 4.5 + 6;
     });
     y += 5;
   }
 
-  // Footer
-  if (y > 260) { pdf.addPage(); y = 20; }
-  pdf.setDrawColor(229, 231, 235);
-  pdf.line(margin, y, pageWidth - margin, y);
-  y += 8;
-  pdf.setTextColor(156, 163, 175);
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'italic');
-  const disclaimer = 'This comparison is generated by AI for reference only. Always verify with a licensed insurance advisor before making changes. Not financial advice.';
-  const discLines = pdf.splitTextToSize(disclaimer, contentWidth);
-  pdf.text(discLines, margin, y);
-
-  // Page numbers
+  // Professional Footer
   const totalPages = pdf.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
+    // Footer line
+    pdf.setDrawColor(203, 213, 225);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, pdf.internal.pageSize.getHeight() - 18, pageWidth - margin, pdf.internal.pageSize.getHeight() - 18);
+    // Footer text
     pdf.setTextColor(156, 163, 175);
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pdf.internal.pageSize.getHeight() - 10);
-    pdf.text('Policy2Summary.com', margin, pdf.internal.pageSize.getHeight() - 10);
+    pdf.text(`Page ${i} of ${totalPages}  |  Policy2Summary.com`, margin, pdf.internal.pageSize.getHeight() - 12);
+    pdf.setFont('helvetica', 'italic');
+    pdf.setTextColor(180, 185, 195);
+    const disclaimer = 'Generated by AI for reference only. Verify with a licensed insurance advisor. Not financial advice.';
+    pdf.text(disclaimer, margin, pdf.internal.pageSize.getHeight() - 6);
   }
 
   pdf.save(`policy2summary-comparison-${docs.length}-policies.pdf`);
