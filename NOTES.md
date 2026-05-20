@@ -285,3 +285,7 @@ try {
 ---
 
 *Last updated: 2026-05-19 by GoldmanSax*
+
+## Contact
+- **Email:** thejpmoregainproject@gmail.com
+- **Added to footer:** 2026-05-20

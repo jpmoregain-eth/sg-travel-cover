@@ -1802,7 +1802,7 @@ function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
@@ -1821,6 +1821,16 @@ function Home() {
                 <li>Microsoft Word (.docx)</li>
                 <li>Plain text (.txt)</li>
                 <li>Paste text directly</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-3">Contact</h4>
+              <ul className="space-y-2 text-sm text-slate-500">
+                <li>
+                  <a href="mailto:thejpmoregainproject@gmail.com" className="hover:text-emerald-600 transition-colors">
+                    thejpmoregainproject@gmail.com
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
