@@ -142,19 +142,26 @@ const generateComparisonPdf = async (docs, comparison) => {
       p.insurer || 'N/A',
       p.type || 'N/A',
       p.annual_premium || 'N/A',
-      p.key_coverages?.join('; ') || 'N/A'
+      p.key_coverages?.slice(0, 2).join('; ') || 'N/A'
     ]);
 
     autoTable(pdf, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Policy', 'Insurer', 'Type', 'Annual Premium', 'Key Coverages']],
+      head: [['Policy', 'Insurer', 'Type', 'Premium', 'Key Coverages']],
       body: policyData,
       theme: 'grid',
       headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 9 },
       bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
       alternateRowStyles: { fillColor: [249, 250, 251] },
-      styles: { overflow: 'linebreak', cellWidth: 'wrap' },
+      styles: { overflow: 'linebreak', cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 45 }
+      }
     });
     y = pdf.lastAutoTable.finalY + 10;
   }
@@ -168,7 +175,7 @@ const generateComparisonPdf = async (docs, comparison) => {
     pdf.text('Coverage Overlap - Money Wasted', margin, y);
     y += 10;
 
-    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated', c]);
+    const overlapData = comparison.overlap_analysis.redundant_coverage.map(c => ['Duplicated', c.substring(0, 120)]);
 
     autoTable(pdf, {
       startY: y,
@@ -177,9 +184,10 @@ const generateComparisonPdf = async (docs, comparison) => {
       body: overlapData,
       theme: 'grid',
       headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
-      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } },
+      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
+      columnStyles: { 0: { cellWidth: 30, fontStyle: 'bold' }, 1: { cellWidth: 140 } },
       alternateRowStyles: { fillColor: [254, 242, 242] },
+      styles: { overflow: 'linebreak', cellPadding: 2 }
     });
     y = pdf.lastAutoTable.finalY + 10;
   }
@@ -193,9 +201,9 @@ const generateComparisonPdf = async (docs, comparison) => {
     pdf.text('Coverage Gaps - Risk Exposure', margin, y);
     y += 10;
 
-    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing', g]);
+    const gapData = comparison.gap_analysis.missing_coverage.map(g => ['Missing', g.substring(0, 120)]);
     if (comparison.gap_analysis.recommended_additions?.length) {
-      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommend', r]));
+      comparison.gap_analysis.recommended_additions.forEach(r => gapData.push(['Recommend', r.substring(0, 120)]));
     }
 
     autoTable(pdf, {
@@ -205,9 +213,10 @@ const generateComparisonPdf = async (docs, comparison) => {
       body: gapData,
       theme: 'grid',
       headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
-      columnStyles: { 0: { cellWidth: 35, fontStyle: 'bold' } },
+      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
+      columnStyles: { 0: { cellWidth: 30, fontStyle: 'bold' }, 1: { cellWidth: 140 } },
       alternateRowStyles: { fillColor: [255, 251, 235] },
+      styles: { overflow: 'linebreak', cellPadding: 2 }
     });
     y = pdf.lastAutoTable.finalY + 10;
   }
@@ -222,8 +231,7 @@ const generateComparisonPdf = async (docs, comparison) => {
     y += 10;
 
     const verdictData = comparison.keep_cancel_ranking.map(r => {
-      const color = r.verdict === 'KEEP' ? [16, 185, 129] : r.verdict === 'CANCEL' ? [239, 68, 68] : [245, 158, 11];
-      return [r.policy_name, r.verdict, r.reason];
+      return [r.policy_name?.substring(0, 30) || 'Unknown', r.verdict, r.reason?.substring(0, 140) || ''];
     });
 
     autoTable(pdf, {
@@ -233,9 +241,14 @@ const generateComparisonPdf = async (docs, comparison) => {
       body: verdictData,
       theme: 'grid',
       headStyles: { fillColor: [16, 185, 129], textColor: 255, fontSize: 10 },
-      bodyStyles: { fontSize: 9, textColor: [55, 65, 81] },
-      columnStyles: { 1: { fontStyle: 'bold' } },
+      bodyStyles: { fontSize: 8, textColor: [55, 65, 81] },
+      columnStyles: {
+        0: { cellWidth: 45 },
+        1: { cellWidth: 25, fontStyle: 'bold' },
+        2: { cellWidth: 100 }
+      },
       alternateRowStyles: { fillColor: [249, 250, 251] },
+      styles: { overflow: 'linebreak', cellPadding: 2 }
     });
     y = pdf.lastAutoTable.finalY + 10;
   }
